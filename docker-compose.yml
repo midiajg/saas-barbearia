@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: barbearia-postgres
+    environment:
+      POSTGRES_USER: barbearia
+      POSTGRES_PASSWORD: barbearia_dev
+      POSTGRES_DB: barbearia
+      TZ: America/Sao_Paulo
+    volumes:
+      - barbearia_pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U barbearia"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  barbearia_pgdata:
