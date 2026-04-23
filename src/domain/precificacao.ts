@@ -12,9 +12,9 @@ import { diasDesde } from "@/lib/utils";
 export type Frequencia = "quinzenal" | "mensal" | "eventual";
 
 export type PrecoServico = {
-  precoQuinzenal: string;
-  precoMensal: string;
-  precoEventual: string;
+  preco_quinzenal: string;
+  preco_mensal: string;
+  preco_eventual: string;
 };
 
 export function classificarFrequencia(ultimaVisita: Date | null): Frequencia {
@@ -30,9 +30,9 @@ export function precoParaFrequencia(
   freq: Frequencia
 ): number {
   const campo: Record<Frequencia, keyof PrecoServico> = {
-    quinzenal: "precoQuinzenal",
-    mensal: "precoMensal",
-    eventual: "precoEventual",
+    quinzenal: "preco_quinzenal",
+    mensal: "preco_mensal",
+    eventual: "preco_eventual",
   };
   return Number.parseFloat(servico[campo[freq]]);
 }

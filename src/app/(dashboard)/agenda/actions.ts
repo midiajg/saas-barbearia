@@ -40,7 +40,7 @@ export async function criarAgendamentoAction(
       servicoId: s.id,
       nome: s.nome,
       preco,
-      duracaoMin: s.duracaoMin,
+      duracaoMin: s.duracao_min,
     };
   });
 

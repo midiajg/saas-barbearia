@@ -17,7 +17,7 @@ export default async function BarbeirosPage() {
     barbeiros.map(async (b) => ({
       ...b,
       servicoIds: (await barbeirosRepo.listServicosDoBarbeiro(b.id)).map(
-        (r) => r.servico.id
+        (s) => s.id
       ),
     }))
   );

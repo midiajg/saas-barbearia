@@ -20,6 +20,10 @@ export const metadata: Metadata = {
   title: "Barbearia — Sistema de Gestão",
   description: "Agenda, clientes, fidelidade e financeiro para sua barbearia",
   manifest: "/manifest.json",
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    apple: "/icons/icon.svg",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

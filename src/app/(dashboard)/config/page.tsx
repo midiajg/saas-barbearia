@@ -39,7 +39,7 @@ export default async function ConfigPage() {
                 id="logoUrl"
                 name="logoUrl"
                 type="url"
-                defaultValue={org.logoUrl ?? ""}
+                defaultValue={org.logo_url ?? ""}
                 placeholder="https://..."
               />
             </div>

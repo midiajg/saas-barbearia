@@ -57,7 +57,7 @@ export function ServicosClient({ servicos }: { servicos: Servico[] }) {
                   <div>
                     <p className="font-medium">{s.nome}</p>
                     <p className="text-xs text-[var(--color-muted)]">
-                      {s.duracaoMin} min
+                      {s.duracao_min} min
                     </p>
                   </div>
                   <Button
@@ -72,9 +72,9 @@ export function ServicosClient({ servicos }: { servicos: Servico[] }) {
                   </Button>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center text-sm">
-                  <PrecoBox label="Quinzenal" valor={s.precoQuinzenal} highlight />
-                  <PrecoBox label="Mensal" valor={s.precoMensal} />
-                  <PrecoBox label="Eventual" valor={s.precoEventual} />
+                  <PrecoBox label="Quinzenal" valor={s.preco_quinzenal} highlight />
+                  <PrecoBox label="Mensal" valor={s.preco_mensal} />
+                  <PrecoBox label="Eventual" valor={s.preco_eventual} />
                 </div>
               </CardContent>
             </Card>
@@ -169,7 +169,7 @@ function ServicoDialog({
                 type="number"
                 min="5"
                 step="5"
-                defaultValue={editing?.duracaoMin ?? 45}
+                defaultValue={editing?.duracao_min ?? 45}
                 required
               />
             </div>
@@ -199,7 +199,7 @@ function ServicoDialog({
                   type="number"
                   step="0.01"
                   min="0"
-                  defaultValue={editing?.precoQuinzenal ?? "0"}
+                  defaultValue={editing?.preco_quinzenal ?? "0"}
                   required
                 />
               </div>
@@ -210,7 +210,7 @@ function ServicoDialog({
                   type="number"
                   step="0.01"
                   min="0"
-                  defaultValue={editing?.precoMensal ?? "0"}
+                  defaultValue={editing?.preco_mensal ?? "0"}
                   required
                 />
               </div>
@@ -223,7 +223,7 @@ function ServicoDialog({
                   type="number"
                   step="0.01"
                   min="0"
-                  defaultValue={editing?.precoEventual ?? "0"}
+                  defaultValue={editing?.preco_eventual ?? "0"}
                   required
                 />
               </div>

@@ -71,9 +71,9 @@ export function NovoAgendamentoDialog({
 
   const totais = useMemo(() => {
     const selecionados = servicos.filter((s) => servicoIds.includes(s.id));
-    const duracao = selecionados.reduce((acc, s) => acc + s.duracaoMin, 0);
+    const duracao = selecionados.reduce((acc, s) => acc + s.duracao_min, 0);
     const valor = selecionados.reduce(
-      (acc, s) => acc + Number.parseFloat(s.precoEventual),
+      (acc, s) => acc + Number.parseFloat(s.preco_eventual),
       0
     );
     return { duracao, valor, selecionados };
@@ -234,8 +234,8 @@ export function NovoAgendamentoDialog({
                       <span>{s.nome}</span>
                     </div>
                     <span className="text-xs text-[var(--color-muted)]">
-                      {s.duracaoMin}min ·{" "}
-                      {formatBRL(Number.parseFloat(s.precoEventual))}
+                      {s.duracao_min}min ·{" "}
+                      {formatBRL(Number.parseFloat(s.preco_eventual))}
                     </span>
                   </label>
                 ))}

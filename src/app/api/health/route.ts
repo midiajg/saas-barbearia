@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
-import { pool } from "@/infrastructure/database/client";
+import { supabaseAdmin } from "@/infrastructure/database/client";
 
 export async function GET() {
   try {
-    const result = await pool.query("SELECT 1 as ok");
+    const { error } = await supabaseAdmin
+      .from("organizations")
+      .select("id", { count: "exact", head: true });
+    if (error) throw error;
     return NextResponse.json({
       status: "ok",
-      db: result.rows[0]?.ok === 1 ? "ok" : "degraded",
+      db: "ok",
       ts: new Date().toISOString(),
     });
   } catch (error) {
