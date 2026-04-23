@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx --env-file=.env.local scripts/seed.ts",
+    "check-db": "node --env-file=.env.local scripts/check-db.mjs",
+    "apply-schema": "node --env-file=.env.local scripts/apply-schema.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",
