@@ -130,6 +130,7 @@ export function ClientesClient({
         <ClienteCardDrawer
           cliente={drawerCliente}
           nivel={nivelAtual(drawerCliente.fpts, niveis)}
+          niveis={niveis}
           fptsRegras={fptsRegras}
           onClose={() => setDrawerCliente(null)}
         />

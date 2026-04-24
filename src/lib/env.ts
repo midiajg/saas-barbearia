@@ -10,7 +10,6 @@ const envSchema = z.object({
   UAZAPI_TOKEN: z.string().optional(),
   CRON_SECRET: z.string().optional(),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
-  TZ: z.string().default("America/Sao_Paulo"),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 
@@ -24,6 +23,11 @@ export const env = envSchema.parse({
   UAZAPI_TOKEN: process.env.UAZAPI_TOKEN,
   CRON_SECRET: process.env.CRON_SECRET,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-  TZ: process.env.TZ,
   NODE_ENV: process.env.NODE_ENV,
 });
+
+// TZ é reservada pelo Vercel (env do sistema). Setamos aqui pra garantir
+// consistência em todos os ambientes (dev, prod, scripts).
+if (!process.env.TZ) {
+  process.env.TZ = "America/Sao_Paulo";
+}

@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { ClienteDialog } from "./cliente-dialog";
 import { registrarEventoFpts } from "./actions";
 import { diasDesde } from "@/lib/utils";
+import { proximoNivel } from "@/domain/fpts";
 import type {
   Cliente,
   FptsRegras,
@@ -38,14 +39,25 @@ type Acao = {
 export function ClienteCardDrawer({
   cliente,
   nivel,
+  niveis,
   fptsRegras,
   onClose,
 }: {
   cliente: Cliente;
   nivel: Nivel | null;
+  niveis: Nivel[];
   fptsRegras: FptsRegras;
   onClose: () => void;
 }) {
+  const prox = proximoNivel(cliente.fpts, niveis);
+  const progressoPct = prox
+    ? Math.min(
+        100,
+        Math.round(((cliente.fpts - (nivel?.min_fpts ?? 0)) /
+          (prox.nivel.min_fpts - (nivel?.min_fpts ?? 0))) *
+          100)
+      )
+    : 100;
   const [editOpen, setEditOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [ajusteAberto, setAjusteAberto] = useState(false);

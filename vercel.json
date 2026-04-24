@@ -1,8 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "regions": ["gru1"],
-  "env": {
-    "TZ": "America/Sao_Paulo"
-  }
+  "regions": ["gru1"]
 }
