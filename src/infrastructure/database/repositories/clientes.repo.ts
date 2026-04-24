@@ -1,4 +1,5 @@
 import { BaseRepo } from "./base";
+import { TABELAS } from "@/infrastructure/database/tabelas";
 import type {
   Cliente,
   DadosPessoais,
@@ -12,7 +13,7 @@ export class ClientesRepo extends BaseRepo {
   async list(opts: { search?: string; limit?: number } = {}): Promise<Cliente[]> {
     const limit = opts.limit ?? 200;
     let q = this.sb
-      .from("clientes")
+      .from(TABELAS.clientes)
       .select("*")
       .eq("barbearia_id", this.barbeariaId)
       .order("nome", { ascending: true })
@@ -28,7 +29,7 @@ export class ClientesRepo extends BaseRepo {
 
   async get(id: string): Promise<Cliente | null> {
     const { data, error } = await this.sb
-      .from("clientes")
+      .from(TABELAS.clientes)
       .select("*")
       .eq("barbearia_id", this.barbeariaId)
       .eq("id", id)
@@ -44,7 +45,7 @@ export class ClientesRepo extends BaseRepo {
     dadosPessoais?: DadosPessoais;
   }): Promise<Cliente> {
     const { data, error } = await this.sb
-      .from("clientes")
+      .from(TABELAS.clientes)
       .insert({
         barbearia_id: this.barbeariaId,
         nome: input.nome,
@@ -69,7 +70,7 @@ export class ClientesRepo extends BaseRepo {
     }>
   ): Promise<Cliente> {
     const { data, error } = await this.sb
-      .from("clientes")
+      .from(TABELAS.clientes)
       .update(input)
       .eq("barbearia_id", this.barbeariaId)
       .eq("id", id)
@@ -102,7 +103,7 @@ export class ClientesRepo extends BaseRepo {
     const nv = nivelAtual(novoFpts, niveis);
 
     const { data, error } = await this.sb
-      .from("clientes")
+      .from(TABELAS.clientes)
       .update({
         fpts: novoFpts,
         cashback_fpts: novoCashback,
@@ -120,7 +121,7 @@ export class ClientesRepo extends BaseRepo {
 
   async atualizarUltimaVisita(id: string, data: Date): Promise<void> {
     const { error } = await this.sb
-      .from("clientes")
+      .from(TABELAS.clientes)
       .update({ ultima_visita: data.toISOString() })
       .eq("barbearia_id", this.barbeariaId)
       .eq("id", id);
@@ -129,7 +130,7 @@ export class ClientesRepo extends BaseRepo {
 
   async deletar(id: string): Promise<void> {
     const { error } = await this.sb
-      .from("clientes")
+      .from(TABELAS.clientes)
       .delete()
       .eq("barbearia_id", this.barbeariaId)
       .eq("id", id);

@@ -1,4 +1,5 @@
 import { BaseRepo } from "./base";
+import { TABELAS } from "@/infrastructure/database/tabelas";
 import type {
   Atendimento,
   ServicoAtendido,
@@ -12,7 +13,7 @@ export class AtendimentosRepo extends BaseRepo {
     const fim = new Date(data);
     fim.setHours(23, 59, 59, 999);
     const { data: rows, error } = await this.sb
-      .from("atendimentos")
+      .from(TABELAS.atendimentos)
       .select("*")
       .eq("barbearia_id", this.barbeariaId)
       .gte("inicio", inicio.toISOString())
@@ -24,7 +25,7 @@ export class AtendimentosRepo extends BaseRepo {
 
   async listPorPeriodo(de: Date, ate: Date): Promise<Atendimento[]> {
     const { data, error } = await this.sb
-      .from("atendimentos")
+      .from(TABELAS.atendimentos)
       .select("*")
       .eq("barbearia_id", this.barbeariaId)
       .gte("inicio", de.toISOString())
@@ -36,7 +37,7 @@ export class AtendimentosRepo extends BaseRepo {
 
   async get(id: string): Promise<Atendimento | null> {
     const { data, error } = await this.sb
-      .from("atendimentos")
+      .from(TABELAS.atendimentos)
       .select("*")
       .eq("barbearia_id", this.barbeariaId)
       .eq("id", id)
@@ -55,7 +56,7 @@ export class AtendimentosRepo extends BaseRepo {
     observacoes?: string;
   }): Promise<Atendimento> {
     const { data: conflito } = await this.sb
-      .from("atendimentos")
+      .from(TABELAS.atendimentos)
       .select("id")
       .eq("barbearia_id", this.barbeariaId)
       .eq("barbeiro_id", input.barbeiroId)
@@ -67,7 +68,7 @@ export class AtendimentosRepo extends BaseRepo {
       throw new Error("Horário em conflito com outro atendimento deste barbeiro");
 
     const { data, error } = await this.sb
-      .from("atendimentos")
+      .from(TABELAS.atendimentos)
       .insert({
         barbearia_id: this.barbeariaId,
         barbeiro_id: input.barbeiroId,
@@ -86,7 +87,7 @@ export class AtendimentosRepo extends BaseRepo {
 
   async mudarStatus(id: string, status: StatusAtendimento): Promise<void> {
     const { error } = await this.sb
-      .from("atendimentos")
+      .from(TABELAS.atendimentos)
       .update({ status })
       .eq("barbearia_id", this.barbeariaId)
       .eq("id", id);
@@ -95,7 +96,7 @@ export class AtendimentosRepo extends BaseRepo {
 
   async mover(id: string, inicio: Date, fim: Date): Promise<void> {
     const { error } = await this.sb
-      .from("atendimentos")
+      .from(TABELAS.atendimentos)
       .update({ inicio: inicio.toISOString(), fim: fim.toISOString() })
       .eq("barbearia_id", this.barbeariaId)
       .eq("id", id);

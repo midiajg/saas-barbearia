@@ -7,6 +7,7 @@ import { AtendimentosRepo } from "@/infrastructure/database/repositories/atendim
 import { ClientesRepo } from "@/infrastructure/database/repositories/clientes.repo";
 import { BarbeariasRepo } from "@/infrastructure/database/repositories/barbearias.repo";
 import { supabaseAdmin } from "@/infrastructure/database/client";
+import { TABELAS } from "@/infrastructure/database/tabelas";
 import { aplicarResgate } from "@/domain/cashback";
 import { nivelAtual } from "@/domain/fpts";
 import type { ProdutoVendido } from "@/infrastructure/database/types";
@@ -111,7 +112,7 @@ export async function fecharConta(input: z.infer<typeof schema>) {
 
   // Atualiza o atendimento → realizado
   await supabaseAdmin
-    .from("atendimentos")
+    .from(TABELAS.atendimentos)
     .update({
       status: "realizado",
       produtos: produtosVendidos.length > 0 ? produtosVendidos : null,

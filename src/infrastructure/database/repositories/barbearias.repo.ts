@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/infrastructure/database/client";
+import { TABELAS } from "@/infrastructure/database/tabelas";
 import type {
   Barbearia,
   BarbeariaConfig,
@@ -53,7 +54,7 @@ export async function buscarBarbeariaPorSlug(
   slug: string
 ): Promise<Barbearia | null> {
   const { data, error } = await supabaseAdmin
-    .from("barbearias")
+    .from(TABELAS.barbearias)
     .select("*")
     .eq("slug", slug)
     .maybeSingle();
@@ -65,7 +66,7 @@ export async function buscarBarbeariaPorId(
   id: string
 ): Promise<Barbearia | null> {
   const { data, error } = await supabaseAdmin
-    .from("barbearias")
+    .from(TABELAS.barbearias)
     .select("*")
     .eq("id", id)
     .maybeSingle();
@@ -79,7 +80,7 @@ export async function criarBarbearia(input: {
   telefone?: string;
 }): Promise<Barbearia> {
   const { data, error } = await supabaseAdmin
-    .from("barbearias")
+    .from(TABELAS.barbearias)
     .insert({
       nome: input.nome,
       slug: input.slug,
@@ -111,7 +112,7 @@ export class BarbeariasRepo {
     plano?: PlanoAssinatura;
   }): Promise<Barbearia> {
     const { data, error } = await this.sb
-      .from("barbearias")
+      .from(TABELAS.barbearias)
       .update(input)
       .eq("id", this.id)
       .select()
@@ -134,7 +135,7 @@ export class BarbeariasRepo {
       whatsapp: { ...atual.config.whatsapp, ...(parcial.whatsapp ?? {}) },
     };
     const { data, error } = await this.sb
-      .from("barbearias")
+      .from(TABELAS.barbearias)
       .update({ config: novo })
       .eq("id", this.id)
       .select()
@@ -169,7 +170,7 @@ export class BarbeariasRepo {
 }
 
 export async function listarTodasBarbeariasAtivas(): Promise<Barbearia[]> {
-  const { data, error } = await supabaseAdmin.from("barbearias").select("*");
+  const { data, error } = await supabaseAdmin.from(TABELAS.barbearias).select("*");
   if (error) throw error;
   return (data ?? []).map(hidratar);
 }

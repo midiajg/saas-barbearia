@@ -8,6 +8,13 @@ import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 import { randomUUID } from "node:crypto";
 
+const T = {
+  barbearias: "[SAAS][BARBEARIA][VICTOR][barbearias]",
+  equipe: "[SAAS][BARBEARIA][VICTOR][equipe]",
+  clientes: "[SAAS][BARBEARIA][VICTOR][clientes]",
+  atendimentos: "[SAAS][BARBEARIA][VICTOR][atendimentos]",
+} as const;
+
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -142,14 +149,14 @@ const PRODUTOS = [
 
 async function main() {
   const { data: existente } = await sb
-    .from("barbearias")
+    .from(T.barbearias)
     .select("id")
     .eq("slug", "barbearia-demo")
     .maybeSingle();
   if (existente) {
     await step("remove demo anterior", async () => {
       const { error } = await sb
-        .from("barbearias")
+        .from(T.barbearias)
         .delete()
         .eq("id", existente.id);
       if (error) throw error;
@@ -158,7 +165,7 @@ async function main() {
 
   const barbearia = await step("cria barbearia demo", async () => {
     const { data, error } = await sb
-      .from("barbearias")
+      .from(T.barbearias)
       .insert({
         nome: "Barbearia Demo",
         slug: "barbearia-demo",
@@ -188,7 +195,7 @@ async function main() {
 
   await step("cria dono", async () => {
     const hash = await bcrypt.hash("demo12345", 12);
-    const { error } = await sb.from("equipe").insert({
+    const { error } = await sb.from(T.equipe).insert({
       barbearia_id: barbearia.id,
       nome: "João (dono)",
       email: "demo@barbearia.dev",
@@ -217,7 +224,7 @@ async function main() {
       cor: e.cor,
       comissao_pct: 50,
     }));
-    const { data, error } = await sb.from("equipe").insert(rows).select();
+    const { data, error } = await sb.from(T.equipe).insert(rows).select();
     if (error) throw error;
     return data;
   });
@@ -247,7 +254,7 @@ async function main() {
       cashback_fpts: Math.floor(i * 120 * 0.6),
       eventos_fpts: [],
     }));
-    const { data, error } = await sb.from("clientes").insert(rows).select();
+    const { data, error } = await sb.from(T.clientes).insert(rows).select();
     if (error) throw error;
     return data;
   });
@@ -290,7 +297,7 @@ async function main() {
         });
       }
     }
-    const { error } = await sb.from("atendimentos").insert(rows);
+    const { error } = await sb.from(T.atendimentos).insert(rows);
     if (error) throw error;
   });
 

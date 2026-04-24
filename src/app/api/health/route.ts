@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/infrastructure/database/client";
+import { TABELAS } from "@/infrastructure/database/tabelas";
 
 export async function GET() {
   try {
     const { error } = await supabaseAdmin
-      .from("organizations")
+      .from(TABELAS.barbearias)
       .select("id", { count: "exact", head: true });
     if (error) throw error;
     return NextResponse.json({

@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/infrastructure/database/client";
+import { TABELAS } from "@/infrastructure/database/tabelas";
 import { BaseRepo } from "./base";
 import type { Cargo, Equipe } from "../types";
 
@@ -6,7 +7,7 @@ export async function buscarEquipePorEmail(
   email: string
 ): Promise<Equipe | null> {
   const { data, error } = await supabaseAdmin
-    .from("equipe")
+    .from(TABELAS.equipe)
     .select("*")
     .eq("email", email)
     .eq("ativo", true)
@@ -18,7 +19,7 @@ export async function buscarEquipePorEmail(
 export class EquipeRepo extends BaseRepo {
   async list(opts: { ativosOnly?: boolean } = {}): Promise<Equipe[]> {
     let q = this.sb
-      .from("equipe")
+      .from(TABELAS.equipe)
       .select("*")
       .eq("barbearia_id", this.barbeariaId)
       .order("nome", { ascending: true });
@@ -30,7 +31,7 @@ export class EquipeRepo extends BaseRepo {
 
   async get(id: string): Promise<Equipe | null> {
     const { data, error } = await this.sb
-      .from("equipe")
+      .from(TABELAS.equipe)
       .select("*")
       .eq("barbearia_id", this.barbeariaId)
       .eq("id", id)
@@ -49,7 +50,7 @@ export class EquipeRepo extends BaseRepo {
     comissaoPct?: number;
   }): Promise<Equipe> {
     const { data, error } = await this.sb
-      .from("equipe")
+      .from(TABELAS.equipe)
       .insert({
         barbearia_id: this.barbeariaId,
         nome: input.nome,
@@ -79,7 +80,7 @@ export class EquipeRepo extends BaseRepo {
     }>
   ): Promise<Equipe> {
     const { data, error } = await this.sb
-      .from("equipe")
+      .from(TABELAS.equipe)
       .update(input)
       .eq("barbearia_id", this.barbeariaId)
       .eq("id", id)
@@ -91,7 +92,7 @@ export class EquipeRepo extends BaseRepo {
 
   async atualizarSenha(id: string, senhaHash: string): Promise<void> {
     const { error } = await this.sb
-      .from("equipe")
+      .from(TABELAS.equipe)
       .update({ senha_hash: senhaHash })
       .eq("barbearia_id", this.barbeariaId)
       .eq("id", id);
