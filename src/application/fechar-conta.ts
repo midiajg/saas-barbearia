@@ -2,16 +2,22 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireStaffSession } from "@/lib/auth/session";
-import { AgendamentosRepo } from "@/infrastructure/database/repositories/agendamentos.repo";
+import { requireSession } from "@/lib/auth/session";
+import { AtendimentosRepo } from "@/infrastructure/database/repositories/atendimentos.repo";
 import { ClientesRepo } from "@/infrastructure/database/repositories/clientes.repo";
-import { OrganizationRepo } from "@/infrastructure/database/repositories/organization.repo";
-import { PagamentosRepo } from "@/infrastructure/database/repositories/pagamentos.repo";
+import { BarbeariasRepo } from "@/infrastructure/database/repositories/barbearias.repo";
 import { supabaseAdmin } from "@/infrastructure/database/client";
 import { aplicarResgate } from "@/domain/cashback";
+import { nivelAtual } from "@/domain/fpts";
+import type { ProdutoVendido } from "@/infrastructure/database/types";
+
+const produtoItemSchema = z.object({
+  produtoId: z.string().uuid(),
+  quantidade: z.coerce.number().int().min(1),
+});
 
 const schema = z.object({
-  agendamentoId: z.string().uuid(),
+  atendimentoId: z.string().uuid(),
   usarCashback: z.boolean(),
   formaPagamento: z.enum([
     "dinheiro",
@@ -21,110 +27,155 @@ const schema = z.object({
     "fiado",
   ]),
   descontoExtra: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+  produtos: z.array(produtoItemSchema).optional(),
 });
 
 export async function fecharConta(input: z.infer<typeof schema>) {
-  const session = await requireStaffSession();
+  const session = await requireSession();
   const data = schema.parse(input);
 
-  const agRepo = new AgendamentosRepo(session.orgId);
-  const clientesRepo = new ClientesRepo(session.orgId);
-  const orgRepo = new OrganizationRepo(session.orgId);
-  const pagamentosRepo = new PagamentosRepo(session.orgId);
+  const atRepo = new AtendimentosRepo(session.barbeariaId);
+  const clientesRepo = new ClientesRepo(session.barbeariaId);
+  const barbeariasRepo = new BarbeariasRepo(session.barbeariaId);
 
-  const agendamento = await agRepo.get(data.agendamentoId);
-  if (!agendamento) throw new Error("Agendamento não encontrado");
-  if (agendamento.status === "realizado")
-    throw new Error("Agendamento já foi fechado");
+  const atendimento = await atRepo.get(data.atendimentoId);
+  if (!atendimento) throw new Error("Atendimento não encontrado");
+  if (atendimento.status === "realizado")
+    throw new Error("Atendimento já foi fechado");
 
-  const org = await orgRepo.get();
-  if (!org) throw new Error("Organização não encontrada");
+  const barbearia = await barbeariasRepo.get();
+  if (!barbearia) throw new Error("Barbearia não encontrada");
 
-  const valorBase = Number.parseFloat(agendamento.valor_total ?? "0");
+  const valorServicos = Number.parseFloat(atendimento.valor_total ?? "0");
+
+  // Nível + cashback do cliente
+  let clienteNivelNumero: number | null = null;
+  let cashbackFptsCliente = 0;
+  if (atendimento.cliente_id) {
+    const cliente = await clientesRepo.get(atendimento.cliente_id);
+    cashbackFptsCliente = cliente?.cashback_fpts ?? 0;
+    if (cliente) {
+      const nv = nivelAtual(cliente.fpts, barbearia.config.niveis);
+      clienteNivelNumero = nv?.numero ?? null;
+    }
+  }
+
+  // Resolve produtos vendidos aplicando desconto por nível
+  const produtosVendidos: ProdutoVendido[] = [];
+  let valorProdutos = 0;
+  const catalogo = new Map(
+    barbearia.config.catalogo_produtos.map((p) => [p.id, p])
+  );
+
+  if (data.produtos && data.produtos.length > 0) {
+    for (const item of data.produtos) {
+      const p = catalogo.get(item.produtoId);
+      if (!p) throw new Error(`Produto ${item.produtoId} não encontrado`);
+      if (!p.ativo) throw new Error(`Produto "${p.nome}" inativo`);
+      if (p.estoque < item.quantidade)
+        throw new Error(`Estoque insuficiente de "${p.nome}"`);
+
+      const precoBase = p.preco;
+      let descPct = 0;
+      if (clienteNivelNumero != null && p.desconto_por_nivel) {
+        descPct = p.desconto_por_nivel[String(clienteNivelNumero)] ?? 0;
+      }
+      const precoFinal =
+        descPct > 0
+          ? Math.round(precoBase * (1 - descPct / 100) * 100) / 100
+          : precoBase;
+
+      produtosVendidos.push({
+        id: p.id,
+        nome: p.nome,
+        preco: precoFinal,
+        qtd: item.quantidade,
+        desconto_pct: descPct || undefined,
+      });
+      valorProdutos += precoFinal * item.quantidade;
+    }
+  }
+
   const descontoExtra = data.descontoExtra
     ? Number.parseFloat(data.descontoExtra)
     : 0;
-  const valorComDescontoExtra = Math.max(0, valorBase - descontoExtra);
-
-  let cashbackFptsCliente = 0;
-  if (agendamento.cliente_id) {
-    const cliente = await clientesRepo.get(agendamento.cliente_id);
-    cashbackFptsCliente = cliente?.cashback_fpts ?? 0;
-  }
+  const valorBase = valorServicos + valorProdutos;
+  const valorComDesconto = Math.max(0, valorBase - descontoExtra);
 
   const resgate = aplicarResgate(
-    valorComDescontoExtra,
+    valorComDesconto,
     data.usarCashback,
     cashbackFptsCliente,
-    {
-      fptsPorReal: org.cashback_fpts_por_real,
-      maxPctPorServico: org.cashback_max_pct_por_servico,
-    }
+    barbearia.config.cashback
   );
 
-  // Atualiza agendamento → realizado
+  // Atualiza o atendimento → realizado
   await supabaseAdmin
-    .from("agendamentos")
+    .from("atendimentos")
     .update({
       status: "realizado",
+      produtos: produtosVendidos.length > 0 ? produtosVendidos : null,
+      valor_total: valorBase.toFixed(2),
       desconto: descontoExtra.toFixed(2),
       cashback_usado_reais: resgate.reaisAbatidos.toFixed(2),
       cashback_usado_fpts: resgate.fptsDebitados,
       valor_pago: resgate.valorFinal.toFixed(2),
       forma_pagamento: data.formaPagamento,
     })
-    .eq("org_id", session.orgId)
-    .eq("id", agendamento.id);
+    .eq("barbearia_id", session.barbeariaId)
+    .eq("id", atendimento.id);
 
-  // Registra pagamento
-  if (resgate.valorFinal > 0) {
-    await pagamentosRepo.criar({
-      agendamentoId: agendamento.id,
-      valor: resgate.valorFinal.toFixed(2),
-      forma: data.formaPagamento,
+  // Debita estoque dos produtos vendidos (atualiza o catálogo JSONB da barbearia)
+  if (produtosVendidos.length > 0) {
+    const novoCatalogo = barbearia.config.catalogo_produtos.map((p) => {
+      const vendido = produtosVendidos.find((v) => v.id === p.id);
+      if (!vendido) return p;
+      return { ...p, estoque: Math.max(0, p.estoque - vendido.qtd) };
     });
+    await barbeariasRepo.salvarCatalogoProdutos(novoCatalogo);
   }
 
-  // Cliente: FPTS pontualidade + debita cashback resgatado + atualiza ultima_visita
-  if (agendamento.cliente_id) {
+  // Cliente: FPTS pontualidade + débito do cashback usado + ultima_visita
+  if (atendimento.cliente_id) {
     if (resgate.fptsDebitados > 0) {
-      await clientesRepo.addFptsEvento({
-        clienteId: agendamento.cliente_id,
-        tipo: "resgate",
-        pontos: -resgate.fptsDebitados,
-        descricao: `Abatimento de R$ ${resgate.reaisAbatidos.toFixed(2)}`,
-      });
-      await supabaseAdmin.from("cashback_resgates").insert({
-        org_id: session.orgId,
-        cliente_id: agendamento.cliente_id,
-        agendamento_id: agendamento.id,
-        fpts_debitados: resgate.fptsDebitados,
-        reais_abatidos: resgate.reaisAbatidos.toFixed(2),
-      });
+      await clientesRepo.registrarEvento(
+        atendimento.cliente_id,
+        {
+          tipo: "resgate",
+          pontos: -resgate.fptsDebitados,
+          descricao: `Abate de R$ ${resgate.reaisAbatidos.toFixed(2)}`,
+        },
+        barbearia.config.niveis
+      );
     }
-
-    const pontualidadePts = org.fpts_regras.pontualidade ?? 100;
-    if (pontualidadePts > 0) {
-      await clientesRepo.addFptsEvento({
-        clienteId: agendamento.cliente_id,
-        tipo: "pontualidade",
-        pontos: pontualidadePts,
-        descricao: "Compareceu ao agendamento",
-      });
+    const pontualidade = barbearia.config.fpts_regras.pontualidade ?? 0;
+    if (pontualidade > 0) {
+      await clientesRepo.registrarEvento(
+        atendimento.cliente_id,
+        {
+          tipo: "pontualidade",
+          pontos: pontualidade,
+          descricao: "Compareceu ao atendimento",
+        },
+        barbearia.config.niveis
+      );
     }
-
     await clientesRepo.atualizarUltimaVisita(
-      agendamento.cliente_id,
-      new Date(agendamento.inicio)
+      atendimento.cliente_id,
+      new Date(atendimento.inicio)
     );
   }
 
   revalidatePath("/agenda");
   revalidatePath("/dashboard");
-  revalidatePath("/financeiro/pagamentos");
+  revalidatePath("/produtos");
+  revalidatePath("/clientes");
+  revalidatePath("/financeiro/comissoes");
 
   return {
     valorBase,
+    valorServicos,
+    valorProdutos,
     descontoExtra,
     cashbackAbatido: resgate.reaisAbatidos,
     valorFinal: resgate.valorFinal,

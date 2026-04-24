@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { adicionarFeriado, removerFeriado } from "./actions";
-import type { Feriado } from "@/infrastructure/database/schema";
+import type { Feriado } from "@/infrastructure/database/types";
 
 export function FeriadosCard({ feriados }: { feriados: Feriado[] }) {
   const [pending, startTransition] = useTransition();
@@ -25,9 +25,9 @@ export function FeriadosCard({ feriados }: { feriados: Feriado[] }) {
     });
   }
 
-  function handleRemove(id: string) {
+  function handleRemove(data: string) {
     startTransition(async () => {
-      await removerFeriado(id);
+      await removerFeriado(data);
       toast.success("Feriado removido");
     });
   }
@@ -38,7 +38,11 @@ export function FeriadosCard({ feriados }: { feriados: Feriado[] }) {
         <CardTitle>Feriados e dias fechados</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <form id="feriado-form" action={handleAdd} className="flex flex-col sm:flex-row gap-3">
+        <form
+          id="feriado-form"
+          action={handleAdd}
+          className="flex flex-col sm:flex-row gap-3"
+        >
           <div className="flex-1 space-y-1">
             <Label htmlFor="data">Data</Label>
             <Input id="data" name="data" type="date" required />
@@ -65,7 +69,7 @@ export function FeriadosCard({ feriados }: { feriados: Feriado[] }) {
           <ul className="divide-y divide-[var(--color-border)]">
             {feriados.map((f) => (
               <li
-                key={f.id}
+                key={f.data}
                 className="flex items-center justify-between py-2"
               >
                 <div>
@@ -77,7 +81,7 @@ export function FeriadosCard({ feriados }: { feriados: Feriado[] }) {
                 <Button
                   size="icon"
                   variant="ghost"
-                  onClick={() => handleRemove(f.id)}
+                  onClick={() => handleRemove(f.data)}
                   disabled={pending}
                 >
                   <Trash2 className="size-4" />

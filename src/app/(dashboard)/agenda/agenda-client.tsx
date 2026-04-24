@@ -9,41 +9,52 @@ import { cn, formatBRL } from "@/lib/utils";
 import { NovoAgendamentoDialog } from "./novo-agendamento-dialog";
 import { AgendamentoCard } from "./agendamento-card";
 import { FecharContaDialog } from "./fechar-conta-dialog";
+import { ClienteCardDialog } from "./cliente-card-dialog";
+import { nivelAtual } from "@/domain/fpts";
 import type {
-  Agendamento,
-  Barbeiro,
-  Servico,
+  Atendimento,
+  CashbackRegra,
+  CatalogoProduto,
+  CatalogoServico,
   Cliente,
+  Equipe,
+  FptsRegras,
+  Nivel,
 } from "@/infrastructure/database/types";
 
 const SLOT_MIN = 15;
-const SLOT_HEIGHT = 18; // px
+const SLOT_HEIGHT = 18;
 
 export function AgendaClient({
   data,
-  barbeiros,
-  agendamentos,
+  equipe,
+  atendimentos,
   servicos,
   clientes,
+  produtos,
+  niveis,
   horaInicio,
   horaFim,
-  cashbackFptsPorReal,
-  cashbackMaxPct,
+  cashbackRegra,
+  fptsRegras,
 }: {
   data: string;
-  barbeiros: Barbeiro[];
-  agendamentos: Agendamento[];
-  servicos: Servico[];
+  equipe: Equipe[];
+  atendimentos: Atendimento[];
+  servicos: CatalogoServico[];
   clientes: Cliente[];
+  produtos: CatalogoProduto[];
+  niveis: Nivel[];
   horaInicio: number;
   horaFim: number;
-  cashbackFptsPorReal: number;
-  cashbackMaxPct: number;
+  cashbackRegra: CashbackRegra;
+  fptsRegras: FptsRegras;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [busca, setBusca] = useState("");
   const [openNovo, setOpenNovo] = useState(false);
+  const [cardAbertoId, setCardAbertoId] = useState<string | null>(null);
   const [fechandoId, setFechandoId] = useState<string | null>(null);
   const [slotInicial, setSlotInicial] = useState<{
     barbeiroId: string;
@@ -78,18 +89,16 @@ export function AgendaClient({
     return arr;
   }, [horaInicio, horaFim]);
 
-  const agendamentosPorBarbeiro = useMemo(() => {
-    const map = new Map<string, Agendamento[]>();
-    for (const b of barbeiros) map.set(b.id, []);
-    for (const a of agendamentos) {
+  const porBarbeiro = useMemo(() => {
+    const map = new Map<string, Atendimento[]>();
+    for (const b of equipe) map.set(b.id, []);
+    for (const a of atendimentos) {
       if (a.status === "cancelado") continue;
       const lista = map.get(a.barbeiro_id);
       if (lista) lista.push(a);
     }
     return map;
-  }, [agendamentos, barbeiros]);
-
-  const filaEspera: Agendamento[] = [];
+  }, [atendimentos, equipe]);
 
   function abrirSlot(barbeiroId: string, slotIdx: number) {
     const slot = slots[slotIdx];
@@ -104,11 +113,21 @@ export function AgendaClient({
     setOpenNovo(true);
   }
 
-  const agendamentoFechando = fechandoId
-    ? agendamentos.find((a) => a.id === fechandoId)
+  const atendimentoCard = cardAbertoId
+    ? atendimentos.find((a) => a.id === cardAbertoId)
     : null;
-  const clienteFechando = agendamentoFechando?.cliente_id
-    ? clientesMap.get(agendamentoFechando.cliente_id)
+  const clienteCard = atendimentoCard?.cliente_id
+    ? (clientesMap.get(atendimentoCard.cliente_id) ?? null)
+    : null;
+
+  const atendimentoFechando = fechandoId
+    ? atendimentos.find((a) => a.id === fechandoId)
+    : null;
+  const clienteFechando = atendimentoFechando?.cliente_id
+    ? clientesMap.get(atendimentoFechando.cliente_id)
+    : null;
+  const clienteNivelNumero = clienteFechando
+    ? (nivelAtual(clienteFechando.fpts, niveis)?.numero ?? null)
     : null;
 
   return (
@@ -171,14 +190,14 @@ export function AgendaClient({
         </div>
       </header>
 
-      {barbeiros.length === 0 ? (
+      {equipe.length === 0 ? (
         <div className="flex-1 flex items-center justify-center text-center">
           <div className="space-y-2 max-w-sm">
             <p className="text-[var(--color-muted)]">
               Cadastre barbeiros antes de usar a agenda.
             </p>
             <Button asChild>
-              <a href="/barbeiros">Ir para Barbeiros</a>
+              <a href="/equipe">Ir para Equipe</a>
             </Button>
           </div>
         </div>
@@ -187,14 +206,14 @@ export function AgendaClient({
           <div
             className="grid sticky top-0 z-20 bg-[var(--color-surface)] border-b border-[var(--color-border)]"
             style={{
-              gridTemplateColumns: `60px 140px repeat(${barbeiros.length}, minmax(160px, 1fr))`,
+              gridTemplateColumns: `60px 140px repeat(${equipe.length}, minmax(160px, 1fr))`,
             }}
           >
             <div />
             <div className="p-3 text-xs uppercase tracking-wider text-[var(--color-muted)] font-semibold border-l border-[var(--color-border)]">
               Fila de espera
             </div>
-            {barbeiros.map((b) => (
+            {equipe.map((b) => (
               <div
                 key={b.id}
                 className="p-3 border-l border-[var(--color-border)] flex items-center gap-2"
@@ -207,8 +226,8 @@ export function AgendaClient({
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">{b.nome}</p>
-                  <p className="text-[10px] text-[var(--color-muted)]">
-                    Barbeiro
+                  <p className="text-[10px] text-[var(--color-muted)] capitalize">
+                    {b.cargo}
                   </p>
                 </div>
               </div>
@@ -218,7 +237,7 @@ export function AgendaClient({
           <div
             className="grid relative"
             style={{
-              gridTemplateColumns: `60px 140px repeat(${barbeiros.length}, minmax(160px, 1fr))`,
+              gridTemplateColumns: `60px 140px repeat(${equipe.length}, minmax(160px, 1fr))`,
             }}
           >
             <div className="border-r border-[var(--color-border)]">
@@ -237,15 +256,11 @@ export function AgendaClient({
             </div>
 
             <div className="border-r border-[var(--color-border)] bg-[var(--color-background)]/30 p-2 space-y-1">
-              {filaEspera.length === 0 ? (
-                <p className="text-xs text-[var(--color-muted)] italic">
-                  Vazia
-                </p>
-              ) : null}
+              <p className="text-xs text-[var(--color-muted)] italic">Vazia</p>
             </div>
 
-            {barbeiros.map((b) => {
-              const items = agendamentosPorBarbeiro.get(b.id) ?? [];
+            {equipe.map((b) => {
+              const items = porBarbeiro.get(b.id) ?? [];
               return (
                 <div
                   key={b.id}
@@ -298,10 +313,7 @@ export function AgendaClient({
                           a.valor_total ? formatBRL(Number(a.valor_total)) : null
                         }
                         dim={!matchBusca}
-                        onClick={() => {
-                          if (a.status === "realizado" || a.status === "cancelado") return;
-                          setFechandoId(a.id);
-                        }}
+                        onClick={() => setCardAbertoId(a.id)}
                       />
                     );
                   })}
@@ -315,22 +327,39 @@ export function AgendaClient({
       <NovoAgendamentoDialog
         open={openNovo}
         onOpenChange={setOpenNovo}
-        barbeiros={barbeiros}
+        equipe={equipe}
         servicos={servicos}
         clientes={clientes}
         slotInicial={slotInicial}
       />
 
-      {agendamentoFechando && (
+      {atendimentoCard && (
+        <ClienteCardDialog
+          open={!!cardAbertoId}
+          onOpenChange={(v) => !v && setCardAbertoId(null)}
+          atendimento={atendimentoCard}
+          cliente={clienteCard}
+          niveis={niveis}
+          servicos={servicos}
+          fptsRegras={fptsRegras}
+          onFecharConta={() => {
+            setCardAbertoId(null);
+            setFechandoId(atendimentoCard.id);
+          }}
+        />
+      )}
+
+      {atendimentoFechando && (
         <FecharContaDialog
           open={!!fechandoId}
           onOpenChange={(v) => !v && setFechandoId(null)}
-          agendamentoId={agendamentoFechando.id}
+          atendimentoId={atendimentoFechando.id}
           clienteNome={clienteFechando?.nome ?? null}
-          valorBase={Number.parseFloat(agendamentoFechando.valor_total ?? "0")}
+          valorBase={Number.parseFloat(atendimentoFechando.valor_total ?? "0")}
           cashbackFpts={clienteFechando?.cashback_fpts ?? 0}
-          cashbackFptsPorReal={cashbackFptsPorReal}
-          cashbackMaxPct={cashbackMaxPct}
+          cashbackRegra={cashbackRegra}
+          produtosDisponiveis={produtos}
+          clienteNivelNumero={clienteNivelNumero}
         />
       )}
     </div>

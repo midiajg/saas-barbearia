@@ -2,9 +2,18 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { supabaseAdmin } from "@/infrastructure/database/client";
 import { hashPassword } from "@/lib/auth/password";
 import { createSession } from "@/lib/auth/session";
+import {
+  buscarBarbeariaPorSlug,
+  criarBarbearia,
+  BarbeariasRepo,
+} from "@/infrastructure/database/repositories/barbearias.repo";
+import {
+  EquipeRepo,
+  buscarEquipePorEmail,
+} from "@/infrastructure/database/repositories/equipe.repo";
+import type { Horario, Nivel } from "@/infrastructure/database/types";
 
 const signupSchema = z.object({
   nomeBarbearia: z.string().min(2),
@@ -23,6 +32,36 @@ function slugify(input: string): string {
     .slice(0, 40);
 }
 
+const HORARIOS_PADRAO: Horario[] = [
+  { dia_semana: 0, abertura: "09:00", fechamento: "14:00", ativo: false },
+  { dia_semana: 1, abertura: "09:00", fechamento: "20:00", ativo: true },
+  { dia_semana: 2, abertura: "09:00", fechamento: "20:00", ativo: true },
+  { dia_semana: 3, abertura: "09:00", fechamento: "20:00", ativo: true },
+  { dia_semana: 4, abertura: "09:00", fechamento: "20:00", ativo: true },
+  { dia_semana: 5, abertura: "09:00", fechamento: "20:00", ativo: true },
+  { dia_semana: 6, abertura: "08:00", fechamento: "18:00", ativo: true },
+];
+
+const NIVEIS_PADRAO: Nivel[] = [
+  { numero: 1, nome: "Bronze", min_fpts: 0, beneficios: [] },
+  {
+    numero: 2,
+    nome: "Prata",
+    min_fpts: 500,
+    beneficios: ["5% em produtos", "+10% FPTS por indicação"],
+  },
+  {
+    numero: 3,
+    nome: "Ouro",
+    min_fpts: 1500,
+    beneficios: [
+      "15% em produtos",
+      "+30% FPTS por indicação",
+      "1 hidracorte/mês",
+    ],
+  },
+];
+
 export async function signupAction(formData: FormData) {
   const parsed = signupSchema.safeParse({
     nomeBarbearia: formData.get("nomeBarbearia"),
@@ -30,83 +69,47 @@ export async function signupAction(formData: FormData) {
     email: formData.get("email"),
     password: formData.get("password"),
   });
+  if (!parsed.success) throw new Error("Dados inválidos");
 
-  if (!parsed.success) {
-    throw new Error("Dados inválidos");
+  const existe = await buscarEquipePorEmail(parsed.data.email);
+  if (existe) throw new Error("Email já cadastrado");
+
+  // slug único
+  let base = slugify(parsed.data.nomeBarbearia);
+  if (!base) base = "barbearia";
+  let slug = base;
+  for (let i = 0; i < 5; i++) {
+    const achou = await buscarBarbeariaPorSlug(slug);
+    if (!achou) break;
+    slug = `${base}-${Math.random().toString(36).slice(2, 6)}`;
   }
 
-  const { data: existing } = await supabaseAdmin
-    .from("users")
-    .select("id")
-    .eq("email", parsed.data.email)
-    .maybeSingle();
+  const barbearia = await criarBarbearia({
+    nome: parsed.data.nomeBarbearia,
+    slug,
+  });
 
-  if (existing) {
-    throw new Error("Email já cadastrado");
-  }
+  const barbeariasRepo = new BarbeariasRepo(barbearia.id);
+  await barbeariasRepo.atualizarConfig({
+    horarios: HORARIOS_PADRAO,
+    niveis: NIVEIS_PADRAO,
+  });
 
-  const baseSlug = slugify(parsed.data.nomeBarbearia);
-  const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
-  const passwordHash = await hashPassword(parsed.data.password);
-
-  const { data: org, error: orgErr } = await supabaseAdmin
-    .from("organizations")
-    .insert({
-      nome: parsed.data.nomeBarbearia,
-      slug,
-    })
-    .select()
-    .single();
-  if (orgErr) throw orgErr;
-
-  const { data: user, error: userErr } = await supabaseAdmin
-    .from("users")
-    .insert({
-      org_id: org.id,
-      email: parsed.data.email,
-      password_hash: passwordHash,
-      nome: parsed.data.nome,
-      role: "owner",
-    })
-    .select()
-    .single();
-  if (userErr) throw userErr;
-
-  // Horários padrão: seg-sex 9h-20h, sáb 8h-18h, dom fechado
-  await supabaseAdmin.from("horarios").insert([
-    { org_id: org.id, dia_semana: 0, abertura: "09:00:00", fechamento: "14:00:00", ativo: false },
-    { org_id: org.id, dia_semana: 1, abertura: "09:00:00", fechamento: "20:00:00", ativo: true },
-    { org_id: org.id, dia_semana: 2, abertura: "09:00:00", fechamento: "20:00:00", ativo: true },
-    { org_id: org.id, dia_semana: 3, abertura: "09:00:00", fechamento: "20:00:00", ativo: true },
-    { org_id: org.id, dia_semana: 4, abertura: "09:00:00", fechamento: "20:00:00", ativo: true },
-    { org_id: org.id, dia_semana: 5, abertura: "09:00:00", fechamento: "20:00:00", ativo: true },
-    { org_id: org.id, dia_semana: 6, abertura: "08:00:00", fechamento: "18:00:00", ativo: true },
-  ]);
-
-  // Níveis padrão de fidelidade
-  await supabaseAdmin.from("niveis").insert([
-    { org_id: org.id, numero: 1, nome: "Bronze", min_fpts: 0, beneficios: { descontoProdutos: 0 } },
-    { org_id: org.id, numero: 2, nome: "Prata", min_fpts: 500, beneficios: { descontoProdutos: 5, bonusIndicacao: 10 } },
-    {
-      org_id: org.id,
-      numero: 3,
-      nome: "Ouro",
-      min_fpts: 1500,
-      beneficios: {
-        descontoProdutos: 15,
-        bonusIndicacao: 30,
-        servicosGratis: ["1 hidracorte/nutricorte por mês"],
-      },
-    },
-  ]);
+  const senhaHash = await hashPassword(parsed.data.password);
+  const equipeRepo = new EquipeRepo(barbearia.id);
+  const pessoa = await equipeRepo.criar({
+    nome: parsed.data.nome,
+    email: parsed.data.email,
+    senhaHash,
+    cargo: "dono",
+  });
 
   await createSession({
-    persona: user.role,
-    userId: user.id,
-    orgId: user.org_id,
-    role: user.role,
-    email: user.email,
-    nome: user.nome,
+    equipeId: pessoa.id,
+    barbeariaId: barbearia.id,
+    cargo: "dono",
+    email: pessoa.email,
+    nome: pessoa.nome,
   });
 
   redirect("/dashboard");

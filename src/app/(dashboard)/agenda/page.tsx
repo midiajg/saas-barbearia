@@ -1,10 +1,8 @@
-import { requireStaffSession } from "@/lib/auth/session";
-import { BarbeirosRepo } from "@/infrastructure/database/repositories/barbeiros.repo";
-import { AgendamentosRepo } from "@/infrastructure/database/repositories/agendamentos.repo";
-import { ServicosRepo } from "@/infrastructure/database/repositories/servicos.repo";
+import { requireSession } from "@/lib/auth/session";
+import { EquipeRepo } from "@/infrastructure/database/repositories/equipe.repo";
+import { AtendimentosRepo } from "@/infrastructure/database/repositories/atendimentos.repo";
 import { ClientesRepo } from "@/infrastructure/database/repositories/clientes.repo";
-import { HorariosRepo } from "@/infrastructure/database/repositories/horarios.repo";
-import { OrganizationRepo } from "@/infrastructure/database/repositories/organization.repo";
+import { BarbeariasRepo } from "@/infrastructure/database/repositories/barbearias.repo";
 import { AgendaClient } from "./agenda-client";
 
 export default async function AgendaPage({
@@ -12,39 +10,35 @@ export default async function AgendaPage({
 }: {
   searchParams: Promise<{ data?: string }>;
 }) {
-  const session = await requireStaffSession();
+  const session = await requireSession();
   const params = await searchParams;
   const data = params.data ? new Date(params.data + "T00:00:00") : new Date();
 
-  const barbeirosRepo = new BarbeirosRepo(session.orgId);
-  const agendamentosRepo = new AgendamentosRepo(session.orgId);
-  const servicosRepo = new ServicosRepo(session.orgId);
-  const clientesRepo = new ClientesRepo(session.orgId);
-  const horariosRepo = new HorariosRepo(session.orgId);
-  const orgRepo = new OrganizationRepo(session.orgId);
+  const equipeRepo = new EquipeRepo(session.barbeariaId);
+  const atRepo = new AtendimentosRepo(session.barbeariaId);
+  const clientesRepo = new ClientesRepo(session.barbeariaId);
+  const barbeariasRepo = new BarbeariasRepo(session.barbeariaId);
 
-  const [barbeirosAll, agendamentosAll, servicos, clientes, horarios, org] =
-    await Promise.all([
-      barbeirosRepo.list({ ativosOnly: true }),
-      agendamentosRepo.listDoDia(data),
-      servicosRepo.list({ ativosOnly: true }),
-      clientesRepo.list({ limit: 500 }),
-      horariosRepo.listSemana(),
-      orgRepo.get(),
-    ]);
+  const [equipeToda, atendimentosAll, clientes, barbearia] = await Promise.all([
+    equipeRepo.list({ ativosOnly: true }),
+    atRepo.listDoDia(data),
+    clientesRepo.list({ limit: 500 }),
+    barbeariasRepo.get(),
+  ]);
 
-  // Barbeiro logado só vê a própria coluna e os próprios agendamentos
-  let barbeiros = barbeirosAll;
-  let agendamentos = agendamentosAll;
-  if (session.role === "barber") {
-    const meu = await barbeirosRepo.getByUserId(session.userId);
-    barbeiros = meu ? [meu] : [];
-    agendamentos = meu
-      ? agendamentosAll.filter((a) => a.barbeiro_id === meu.id)
-      : [];
+  // Barbeiro logado só vê a si próprio + seus atendimentos
+  let equipe = equipeToda;
+  let atendimentos = atendimentosAll;
+  if (session.cargo === "barbeiro") {
+    equipe = equipeToda.filter((e) => e.id === session.equipeId);
+    atendimentos = atendimentosAll.filter(
+      (a) => a.barbeiro_id === session.equipeId
+    );
   }
 
-  const horarioDoDia = horarios.find((h) => h.dia_semana === data.getDay());
+  const horarios = barbearia?.config.horarios ?? [];
+  const diaSemana = data.getDay();
+  const horarioDoDia = horarios.find((h) => h.dia_semana === diaSemana);
   const horaInicio = horarioDoDia?.ativo
     ? Number.parseInt(horarioDoDia.abertura.slice(0, 2))
     : 8;
@@ -52,17 +46,36 @@ export default async function AgendaPage({
     ? Number.parseInt(horarioDoDia.fechamento.slice(0, 2)) + 1
     : 21;
 
+  const servicos = (barbearia?.config.catalogo_servicos ?? []).filter(
+    (s) => s.ativo
+  );
+  const produtos = (barbearia?.config.catalogo_produtos ?? []).filter(
+    (p) => p.ativo
+  );
+
   return (
     <AgendaClient
       data={data.toISOString().slice(0, 10)}
-      barbeiros={barbeiros}
-      agendamentos={agendamentos}
+      equipe={equipe}
+      atendimentos={atendimentos}
       servicos={servicos}
       clientes={clientes}
+      produtos={produtos}
+      niveis={barbearia?.config.niveis ?? []}
       horaInicio={horaInicio}
       horaFim={horaFim}
-      cashbackFptsPorReal={org?.cashback_fpts_por_real ?? 100}
-      cashbackMaxPct={org?.cashback_max_pct_por_servico ?? 30}
+      cashbackRegra={
+        barbearia?.config.cashback ?? { fpts_por_real: 100, max_pct: 30 }
+      }
+      fptsRegras={
+        barbearia?.config.fpts_regras ?? {
+          google: 500,
+          indicacao: 500,
+          instagram: 300,
+          pontualidade: 100,
+          aniversario: 200,
+        }
+      }
     />
   );
 }

@@ -9,21 +9,21 @@ import {
   Scissors,
   ShoppingBag,
   Wallet,
-  CreditCard,
   BarChart3,
   Clock,
   MessageCircle,
   Settings,
   UserCircle,
+  Gem,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { UserRole } from "@/infrastructure/database/types";
+import type { Cargo } from "@/infrastructure/database/types";
 
 type NavItem = {
   href: string;
   label: string;
   icon: typeof LayoutDashboard;
-  roles?: UserRole[];
+  cargos?: Cargo[];
 };
 
 type NavSection = { label?: string; items: NavItem[] };
@@ -39,45 +39,35 @@ const SECTIONS: NavSection[] = [
     label: "Gestão",
     items: [
       {
-        href: "/barbeiros",
-        label: "Barbeiros",
+        href: "/equipe",
+        label: "Equipe",
         icon: UserCircle,
-        roles: ["owner", "manager"],
+        cargos: ["dono", "gerente"],
       },
       { href: "/clientes", label: "Clientes", icon: Users },
       {
         href: "/servicos",
         label: "Serviços",
         icon: Scissors,
-        roles: ["owner", "manager"],
+        cargos: ["dono", "gerente"],
       },
       {
         href: "/produtos",
         label: "Produtos",
         icon: ShoppingBag,
-        roles: ["owner", "manager"],
+        cargos: ["dono", "gerente"],
       },
     ],
   },
   {
     label: "Financeiro",
     items: [
-      {
-        href: "/financeiro/comissoes",
-        label: "Comissões",
-        icon: Wallet,
-      },
-      {
-        href: "/financeiro/pagamentos",
-        label: "Pagamentos",
-        icon: CreditCard,
-        roles: ["owner", "manager"],
-      },
+      { href: "/financeiro/comissoes", label: "Comissões", icon: Wallet },
       {
         href: "/financeiro/relatorios",
         label: "Relatórios",
         icon: BarChart3,
-        roles: ["owner", "manager"],
+        cargos: ["dono", "gerente"],
       },
     ],
   },
@@ -88,30 +78,36 @@ const SECTIONS: NavSection[] = [
         href: "/config/horarios",
         label: "Horários",
         icon: Clock,
-        roles: ["owner", "manager"],
+        cargos: ["dono", "gerente"],
       },
       {
         href: "/config/whatsapp",
         label: "WhatsApp",
         icon: MessageCircle,
-        roles: ["owner", "manager"],
+        cargos: ["dono", "gerente"],
+      },
+      {
+        href: "/config/assinatura",
+        label: "Assinatura",
+        icon: Gem,
+        cargos: ["dono"],
       },
       {
         href: "/config",
         label: "Barbearia",
         icon: Settings,
-        roles: ["owner"],
+        cargos: ["dono"],
       },
     ],
   },
 ];
 
-export function Sidebar({ role }: { role: UserRole }) {
+export function Sidebar({ cargo }: { cargo: Cargo }) {
   const pathname = usePathname();
 
   const visivel = SECTIONS.map((s) => ({
     ...s,
-    items: s.items.filter((i) => !i.roles || i.roles.includes(role)),
+    items: s.items.filter((i) => !i.cargos || i.cargos.includes(cargo)),
   })).filter((s) => s.items.length > 0);
 
   return (

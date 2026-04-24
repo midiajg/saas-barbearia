@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,14 +13,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
-import { criarServico, atualizarServico } from "./actions";
+import { criarServico, atualizarServico, deletarServico } from "./actions";
 import { formatBRL } from "@/lib/utils";
-import type { Servico } from "@/infrastructure/database/schema";
+import type { CatalogoServico } from "@/infrastructure/database/types";
 
-export function ServicosClient({ servicos }: { servicos: Servico[] }) {
+export function ServicosClient({ servicos }: { servicos: CatalogoServico[] }) {
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Servico | null>(null);
+  const [editing, setEditing] = useState<CatalogoServico | null>(null);
 
   return (
     <div className="space-y-6">
@@ -93,7 +93,7 @@ function PrecoBox({
   highlight,
 }: {
   label: string;
-  valor: string;
+  valor: number;
   highlight?: boolean;
 }) {
   return (
@@ -112,7 +112,7 @@ function PrecoBox({
           highlight ? "text-[var(--color-primary)]" : ""
         }`}
       >
-        {formatBRL(Number.parseFloat(valor))}
+        {formatBRL(valor)}
       </p>
     </div>
   );
@@ -125,7 +125,7 @@ function ServicoDialog({
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  editing: Servico | null;
+  editing: CatalogoServico | null;
 }) {
   const [pending, startTransition] = useTransition();
 
@@ -146,6 +146,20 @@ function ServicoDialog({
     });
   }
 
+  async function onDelete() {
+    if (!editing) return;
+    if (!confirm(`Apagar "${editing.nome}"?`)) return;
+    startTransition(async () => {
+      try {
+        await deletarServico(editing.id);
+        toast.success("Serviço apagado");
+        onOpenChange(false);
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Erro ao apagar");
+      }
+    });
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -159,13 +173,20 @@ function ServicoDialog({
             <Label htmlFor="nome">Nome</Label>
             <Input id="nome" name="nome" defaultValue={editing?.nome} required />
           </div>
-
+          <div className="space-y-2">
+            <Label htmlFor="descricao">Descrição</Label>
+            <Input
+              id="descricao"
+              name="descricao"
+              defaultValue={editing?.descricao ?? ""}
+            />
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="duracaoMin">Duração (min)</Label>
+              <Label htmlFor="duracao_min">Duração (min)</Label>
               <Input
-                id="duracaoMin"
-                name="duracaoMin"
+                id="duracao_min"
+                name="duracao_min"
                 type="number"
                 min="5"
                 step="5"
@@ -186,7 +207,6 @@ function ServicoDialog({
               </div>
             )}
           </div>
-
           <div className="space-y-2">
             <Label>Preços por frequência</Label>
             <div className="grid grid-cols-3 gap-2">
@@ -195,22 +215,22 @@ function ServicoDialog({
                   Quinzenal
                 </p>
                 <Input
-                  name="precoQuinzenal"
+                  name="preco_quinzenal"
                   type="number"
                   step="0.01"
                   min="0"
-                  defaultValue={editing?.preco_quinzenal ?? "0"}
+                  defaultValue={editing?.preco_quinzenal ?? 0}
                   required
                 />
               </div>
               <div>
                 <p className="text-xs text-[var(--color-muted)] mb-1">Mensal</p>
                 <Input
-                  name="precoMensal"
+                  name="preco_mensal"
                   type="number"
                   step="0.01"
                   min="0"
-                  defaultValue={editing?.preco_mensal ?? "0"}
+                  defaultValue={editing?.preco_mensal ?? 0}
                   required
                 />
               </div>
@@ -219,32 +239,42 @@ function ServicoDialog({
                   Eventual
                 </p>
                 <Input
-                  name="precoEventual"
+                  name="preco_eventual"
                   type="number"
                   step="0.01"
                   min="0"
-                  defaultValue={editing?.preco_eventual ?? "0"}
+                  defaultValue={editing?.preco_eventual ?? 0}
                   required
                 />
               </div>
             </div>
-            <p className="text-xs text-[var(--color-muted)]">
-              Cliente que volta a cada 15 dias paga menos. A cada 30, intermediário.
-              Mais de 45, eventual.
-            </p>
           </div>
-
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={pending}>
-              {pending ? "Salvando..." : "Salvar"}
-            </Button>
+          <div className="flex justify-between gap-2 pt-2">
+            {editing ? (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onDelete}
+                disabled={pending}
+                className="text-[var(--color-destructive)]"
+              >
+                <Trash2 className="size-4" /> Apagar
+              </Button>
+            ) : (
+              <div />
+            )}
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={pending}>
+                {pending ? "Salvando..." : "Salvar"}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

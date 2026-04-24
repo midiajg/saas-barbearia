@@ -2,29 +2,28 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireOwnerOrManager } from "@/lib/auth/session";
-import { OrganizationRepo } from "@/infrastructure/database/repositories/organization.repo";
+import { requireDonoOuGerente } from "@/lib/auth/session";
+import { BarbeariasRepo } from "@/infrastructure/database/repositories/barbearias.repo";
 
 const schema = z.object({
   nome: z.string().min(2),
+  telefone: z.string().optional().or(z.literal("")),
   logoUrl: z.string().url().optional().or(z.literal("")),
-  fusoHorario: z.string().min(3),
 });
 
 export async function atualizarBarbearia(formData: FormData) {
-  const session = await requireOwnerOrManager();
+  const session = await requireDonoOuGerente();
   const parsed = schema.parse({
     nome: formData.get("nome"),
+    telefone: formData.get("telefone"),
     logoUrl: formData.get("logoUrl"),
-    fusoHorario: formData.get("fusoHorario"),
   });
 
-  const repo = new OrganizationRepo(session.orgId);
-  await repo.update({
+  const repo = new BarbeariasRepo(session.barbeariaId);
+  await repo.atualizarPerfil({
     nome: parsed.nome,
+    telefone: parsed.telefone || null,
     logo_url: parsed.logoUrl || null,
-    fuso_horario: parsed.fusoHorario,
   });
-
   revalidatePath("/config");
 }

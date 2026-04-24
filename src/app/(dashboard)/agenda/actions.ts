@@ -2,11 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireStaffSession } from "@/lib/auth/session";
-import { AgendamentosRepo } from "@/infrastructure/database/repositories/agendamentos.repo";
-import { ServicosRepo } from "@/infrastructure/database/repositories/servicos.repo";
+import { requireSession } from "@/lib/auth/session";
+import { AtendimentosRepo } from "@/infrastructure/database/repositories/atendimentos.repo";
+import { BarbeariasRepo } from "@/infrastructure/database/repositories/barbearias.repo";
 import { ClientesRepo } from "@/infrastructure/database/repositories/clientes.repo";
 import { calcularPreco } from "@/domain/precificacao";
+import type { StatusAtendimento } from "@/infrastructure/database/types";
 
 const schema = z.object({
   barbeiroId: z.string().uuid(),
@@ -16,73 +17,65 @@ const schema = z.object({
   servicoIds: z.array(z.string().uuid()).min(1),
 });
 
-export async function criarAgendamentoAction(
+export async function criarAtendimentoAction(
   input: z.infer<typeof schema>
 ): Promise<{ id: string }> {
-  const session = await requireStaffSession();
+  const session = await requireSession();
   const data = schema.parse(input);
 
-  const servicosRepo = new ServicosRepo(session.orgId);
-  const clientesRepo = new ClientesRepo(session.orgId);
-  const agRepo = new AgendamentosRepo(session.orgId);
+  const barbeariasRepo = new BarbeariasRepo(session.barbeariaId);
+  const atRepo = new AtendimentosRepo(session.barbeariaId);
+  const clientesRepo = new ClientesRepo(session.barbeariaId);
 
-  const todosServicos = await servicosRepo.list({ ativosOnly: true });
-  const selecionados = todosServicos.filter((s) => data.servicoIds.includes(s.id));
+  const barbearia = await barbeariasRepo.get();
+  if (!barbearia) throw new Error("Barbearia não encontrada");
+
+  const selecionados = barbearia.config.catalogo_servicos.filter((s) =>
+    data.servicoIds.includes(s.id)
+  );
   if (selecionados.length === 0) throw new Error("Serviço inválido");
 
-  const ultimaVisita = data.clienteId
-    ? await clientesRepo.ultimaVisitaConcluida(data.clienteId)
-    : null;
+  let ultimaVisita: Date | null = null;
+  if (data.clienteId) {
+    const c = await clientesRepo.get(data.clienteId);
+    ultimaVisita = c?.ultima_visita ? new Date(c.ultima_visita) : null;
+  }
 
   const itens = selecionados.map((s) => {
     const { preco } = calcularPreco(s, ultimaVisita);
-    return {
-      servicoId: s.id,
-      nome: s.nome,
-      preco,
-      duracaoMin: s.duracao_min,
-    };
+    return { id: s.id, nome: s.nome, preco, duracao_min: s.duracao_min };
   });
 
-  const duracaoTotal = itens.reduce((acc, i) => acc + i.duracaoMin, 0);
+  const duracaoTotal = itens.reduce((acc, i) => acc + i.duracao_min, 0);
   const valorTotal = itens.reduce((acc, i) => acc + i.preco, 0);
 
   const inicio = new Date(`${data.data}T${data.horario}:00`);
   const fim = new Date(inicio.getTime() + duracaoTotal * 60 * 1000);
 
-  const created = await agRepo.create({
+  const criado = await atRepo.criar({
     barbeiroId: data.barbeiroId,
     clienteId: data.clienteId ?? undefined,
     inicio,
     fim,
     servicos: itens,
-    valorTotal: valorTotal.toFixed(2),
+    valorTotal,
   });
 
   revalidatePath("/agenda");
   revalidatePath("/dashboard");
-  return { id: created.id };
+  return { id: criado.id };
 }
 
-export async function atualizarStatusAction(
+export async function mudarStatusAction(
   id: string,
-  status:
-    | "agendado"
-    | "confirmado"
-    | "em_atendimento"
-    | "realizado"
-    | "no_show"
-    | "cancelado"
+  status: StatusAtendimento
 ) {
-  const session = await requireStaffSession();
-  const repo = new AgendamentosRepo(session.orgId);
-  await repo.updateStatus(id, status);
+  const session = await requireSession();
+  const repo = new AtendimentosRepo(session.barbeariaId);
+  await repo.mudarStatus(id, status);
   revalidatePath("/agenda");
 }
 
-export async function cancelarAgendamentoAction(id: string) {
-  const session = await requireStaffSession();
-  const repo = new AgendamentosRepo(session.orgId);
-  await repo.cancelar(id);
-  revalidatePath("/agenda");
+export async function cancelarAtendimentoAction(id: string) {
+  return mudarStatusAction(id, "cancelado");
 }

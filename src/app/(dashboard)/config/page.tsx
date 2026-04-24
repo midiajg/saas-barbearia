@@ -1,5 +1,5 @@
-import { requireStaffSession } from "@/lib/auth/session";
-import { OrganizationRepo } from "@/infrastructure/database/repositories/organization.repo";
+import { requireDono } from "@/lib/auth/session";
+import { BarbeariasRepo } from "@/infrastructure/database/repositories/barbearias.repo";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,11 +7,10 @@ import { Button } from "@/components/ui/button";
 import { atualizarBarbearia } from "./actions";
 
 export default async function ConfigPage() {
-  const session = await requireStaffSession();
-  const repo = new OrganizationRepo(session.orgId);
-  const org = await repo.get();
-
-  if (!org) return null;
+  const session = await requireDono();
+  const repo = new BarbeariasRepo(session.barbeariaId);
+  const barbearia = await repo.get();
+  if (!barbearia) return null;
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -30,7 +29,17 @@ export default async function ConfigPage() {
           <form action={atualizarBarbearia} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="nome">Nome da barbearia</Label>
-              <Input id="nome" name="nome" defaultValue={org.nome} required />
+              <Input id="nome" name="nome" defaultValue={barbearia.nome} required />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="telefone">Telefone</Label>
+              <Input
+                id="telefone"
+                name="telefone"
+                defaultValue={barbearia.telefone ?? ""}
+                placeholder="(00) 00000-0000"
+              />
             </div>
 
             <div className="space-y-2">
@@ -39,17 +48,8 @@ export default async function ConfigPage() {
                 id="logoUrl"
                 name="logoUrl"
                 type="url"
-                defaultValue={org.logo_url ?? ""}
+                defaultValue={barbearia.logo_url ?? ""}
                 placeholder="https://..."
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fusoHorario">Fuso horário</Label>
-              <Input
-                id="fusoHorario"
-                name="fusoHorario"
-                defaultValue={org.fuso_horario}
               />
             </div>
 

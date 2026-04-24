@@ -2,8 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireStaffSession } from "@/lib/auth/session";
+import { requireSession } from "@/lib/auth/session";
 import { ClientesRepo } from "@/infrastructure/database/repositories/clientes.repo";
+import { BarbeariasRepo } from "@/infrastructure/database/repositories/barbearias.repo";
+import type { DadosPessoais } from "@/infrastructure/database/types";
 
 const baseSchema = z.object({
   nome: z.string().min(2),
@@ -33,63 +35,42 @@ function parse(formData: FormData) {
   });
 }
 
-function nullify<T extends Record<string, string | undefined>>(
-  obj: T
-): { [K in keyof T]: string | undefined } {
-  const out = {} as { [K in keyof T]: string | undefined };
-  for (const k in obj) {
-    out[k] = obj[k] === "" ? undefined : obj[k];
-  }
-  return out;
+function toDadosPessoais(
+  data: z.infer<typeof baseSchema>
+): DadosPessoais | null {
+  const d: DadosPessoais = {};
+  if (data.endereco) d.endereco = data.endereco;
+  if (data.aniversario) d.aniversario = data.aniversario;
+  if (data.filhos) d.filhos = data.filhos;
+  if (data.profissao) d.profissao = data.profissao;
+  if (data.hobby) d.hobby = data.hobby;
+  return Object.keys(d).length > 0 ? d : null;
 }
 
 export async function criarCliente(formData: FormData) {
-  const session = await requireStaffSession();
-  const data = nullify(parse(formData));
-  const repo = new ClientesRepo(session.orgId);
-  await repo.create({
-    nome: data.nome!,
-    telefone: data.telefone,
-    email: data.email,
-    endereco: data.endereco,
-    aniversario: data.aniversario,
-    filhos: data.filhos,
-    profissao: data.profissao,
-    hobby: data.hobby,
+  const session = await requireSession();
+  const data = parse(formData);
+  const repo = new ClientesRepo(session.barbeariaId);
+  await repo.criar({
+    nome: data.nome,
+    telefone: data.telefone || undefined,
+    email: data.email || undefined,
+    dadosPessoais: toDadosPessoais(data) ?? undefined,
   });
   revalidatePath("/clientes");
 }
 
 export async function atualizarCliente(id: string, formData: FormData) {
-  const session = await requireStaffSession();
+  const session = await requireSession();
   const data = parse(formData);
-  const repo = new ClientesRepo(session.orgId);
-  await repo.update(id, {
+  const repo = new ClientesRepo(session.barbeariaId);
+  await repo.atualizar(id, {
     nome: data.nome,
     telefone: data.telefone || null,
     email: data.email || null,
-    endereco: data.endereco || null,
-    aniversario: data.aniversario || null,
-    filhos: data.filhos || null,
-    profissao: data.profissao || null,
-    hobby: data.hobby || null,
+    dados_pessoais: toDadosPessoais(data),
   });
   revalidatePath("/clientes");
-}
-
-export async function adicionarNota(clienteId: string, texto: string) {
-  const session = await requireStaffSession();
-  if (!texto.trim()) throw new Error("Nota vazia");
-  const repo = new ClientesRepo(session.orgId);
-  const nota = await repo.addNota(clienteId, texto.trim(), session.userId);
-  revalidatePath("/clientes");
-  return nota;
-}
-
-export async function listarNotas(clienteId: string) {
-  const session = await requireStaffSession();
-  const repo = new ClientesRepo(session.orgId);
-  return repo.listNotas(clienteId);
 }
 
 export async function ajustarFpts(
@@ -97,13 +78,21 @@ export async function ajustarFpts(
   pontos: number,
   descricao: string
 ) {
-  const session = await requireStaffSession();
-  const repo = new ClientesRepo(session.orgId);
-  await repo.addFptsEvento({
+  const session = await requireSession();
+  const clientesRepo = new ClientesRepo(session.barbeariaId);
+  const barbeariasRepo = new BarbeariasRepo(session.barbeariaId);
+  const barbearia = await barbeariasRepo.get();
+  await clientesRepo.registrarEvento(
     clienteId,
-    tipo: "ajuste_manual",
-    pontos,
-    descricao,
-  });
+    { tipo: "ajuste", pontos, descricao },
+    barbearia?.config.niveis ?? []
+  );
+  revalidatePath("/clientes");
+}
+
+export async function deletarCliente(id: string) {
+  const session = await requireSession();
+  const repo = new ClientesRepo(session.barbeariaId);
+  await repo.deletar(id);
   revalidatePath("/clientes");
 }

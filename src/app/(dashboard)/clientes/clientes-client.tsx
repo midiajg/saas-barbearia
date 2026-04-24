@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { ClienteDialog } from "./cliente-dialog";
 import { ClienteCardDrawer } from "./cliente-card-drawer";
-import type { Cliente, Nivel } from "@/infrastructure/database/schema";
+import { nivelAtual } from "@/domain/fpts";
+import type { Cliente, Nivel } from "@/infrastructure/database/types";
 
 export function ClientesClient({
   clientes,
@@ -30,11 +31,6 @@ export function ClientesClient({
     startTransition(() =>
       router.push(`/clientes${q ? `?q=${encodeURIComponent(q)}` : ""}`)
     );
-  }
-
-  function nivelDe(c: Cliente): Nivel | null {
-    if (!c.nivel_id) return niveis.find((n) => n.numero === 1) ?? null;
-    return niveis.find((n) => n.id === c.nivel_id) ?? null;
   }
 
   return (
@@ -77,7 +73,7 @@ export function ClientesClient({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {clientes.map((c) => {
-            const nivel = nivelDe(c);
+            const nivel = nivelAtual(c.fpts, niveis);
             return (
               <button
                 key={c.id}
@@ -127,7 +123,7 @@ export function ClientesClient({
       {drawerCliente && (
         <ClienteCardDrawer
           cliente={drawerCliente}
-          nivel={nivelDe(drawerCliente)}
+          nivel={nivelAtual(drawerCliente.fpts, niveis)}
           onClose={() => setDrawerCliente(null)}
         />
       )}

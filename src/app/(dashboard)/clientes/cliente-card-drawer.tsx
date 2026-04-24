@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState } from "react";
 import {
   Star,
   Home,
@@ -10,16 +10,12 @@ import {
   Dumbbell,
   Phone,
   X,
-  MessageCircle,
   Pencil,
-  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { adicionarNota, listarNotas } from "./actions";
 import { ClienteDialog } from "./cliente-dialog";
 import { diasDesde } from "@/lib/utils";
-import type { Cliente, Nivel, ClienteNota } from "@/infrastructure/database/schema";
+import type { Cliente, Nivel } from "@/infrastructure/database/types";
 
 export function ClienteCardDrawer({
   cliente,
@@ -30,24 +26,8 @@ export function ClienteCardDrawer({
   nivel: Nivel | null;
   onClose: () => void;
 }) {
-  const [notas, setNotas] = useState<ClienteNota[]>([]);
-  const [novaNota, setNovaNota] = useState("");
-  const [pending, startTransition] = useTransition();
   const [editOpen, setEditOpen] = useState(false);
-
-  useEffect(() => {
-    listarNotas(cliente.id).then((rows) => setNotas(rows));
-  }, [cliente.id]);
-
-  function salvarNota() {
-    if (!novaNota.trim()) return;
-    const texto = novaNota.trim();
-    startTransition(async () => {
-      const nova = await adicionarNota(cliente.id, texto);
-      setNotas((prev) => [nova, ...prev]);
-      setNovaNota("");
-    });
-  }
+  const d = cliente.dados_pessoais ?? {};
 
   const ultimaVisitaTxt = cliente.ultima_visita
     ? `há ${diasDesde(new Date(cliente.ultima_visita))} dias`
@@ -55,10 +35,7 @@ export function ClienteCardDrawer({
 
   return (
     <>
-      <div
-        className="fixed inset-0 bg-black/60 z-40"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black/60 z-40" onClick={onClose} />
       <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[480px] bg-[var(--color-surface)] z-50 border-l border-[var(--color-border)] overflow-auto scrollbar-thin">
         <div className="sticky top-0 bg-[var(--color-surface)] border-b border-[var(--color-border)] p-4 flex items-center justify-between">
           <h2 className="font-display text-lg">Cliente</h2>
@@ -115,32 +92,29 @@ export function ClienteCardDrawer({
           </div>
 
           <div className="space-y-2 text-sm">
-            {cliente.endereco && (
-              <Row icon={<Home className="size-4" />} text={cliente.endereco} />
+            {d.endereco && (
+              <Row icon={<Home className="size-4" />} text={d.endereco} />
             )}
-            {cliente.aniversario && (
+            {d.aniversario && (
               <Row
                 icon={<Cake className="size-4" />}
-                text={new Date(cliente.aniversario).toLocaleDateString("pt-BR")}
+                text={new Date(d.aniversario).toLocaleDateString("pt-BR")}
               />
             )}
-            {cliente.filhos && (
+            {d.filhos && (
               <Row
                 icon={<UsersIcon className="size-4" />}
-                text={cliente.filhos}
+                text={d.filhos}
               />
             )}
-            {cliente.profissao && (
+            {d.profissao && (
               <Row
                 icon={<Briefcase className="size-4" />}
-                text={cliente.profissao}
+                text={d.profissao}
               />
             )}
-            {cliente.hobby && (
-              <Row
-                icon={<Dumbbell className="size-4" />}
-                text={cliente.hobby}
-              />
+            {d.hobby && (
+              <Row icon={<Dumbbell className="size-4" />} text={d.hobby} />
             )}
             {cliente.telefone && (
               <Row
@@ -150,69 +124,55 @@ export function ClienteCardDrawer({
             )}
           </div>
 
-          {nivel?.beneficios ? (
+          {nivel?.beneficios && nivel.beneficios.length > 0 ? (
             <div className="p-3 rounded-md border border-yellow-500/30 bg-yellow-500/5 space-y-1">
               <p className="text-xs uppercase tracking-wider text-yellow-500/80 font-semibold">
                 Benefícios {nivel.nome}
               </p>
-              {nivel.beneficios.descontoProdutos ? (
-                <p className="text-sm">
-                  {nivel.beneficios.descontoProdutos}% em produtos
+              {nivel.beneficios.map((b, i) => (
+                <p key={i} className="text-sm">
+                  {b}
                 </p>
-              ) : null}
-              {nivel.beneficios.bonusIndicacao ? (
-                <p className="text-sm">
-                  {nivel.beneficios.bonusIndicacao}% trazendo um amigo
-                </p>
-              ) : null}
-              {nivel.beneficios.servicosGratis?.map((s, i) => (
-                <p key={i} className="text-sm">{s}</p>
               ))}
             </div>
           ) : null}
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="font-medium flex items-center gap-2">
-                <MessageCircle className="size-4" />
-                Notas de relacionamento
-              </h3>
-            </div>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Ex: viaja amanhã pros EUA..."
-                value={novaNota}
-                onChange={(e) => setNovaNota(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && salvarNota()}
-              />
-              <Button
-                size="icon"
-                onClick={salvarNota}
-                disabled={pending || !novaNota.trim()}
-              >
-                <Plus className="size-4" />
-              </Button>
-            </div>
-            {notas.length === 0 ? (
-              <p className="text-xs text-[var(--color-muted)]">
-                Nenhuma nota ainda.
-              </p>
-            ) : (
-              <ul className="space-y-2">
-                {notas.map((n) => (
-                  <li
-                    key={n.id}
-                    className="p-3 rounded-md border border-[var(--color-border)] bg-[var(--color-background)]/40"
-                  >
-                    <p className="text-sm">{n.texto}</p>
-                    <p className="text-[10px] text-[var(--color-muted)] mt-1">
-                      {new Date(n.criado_em).toLocaleString("pt-BR")}
-                    </p>
-                  </li>
-                ))}
+          {cliente.eventos_fpts.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="font-medium text-sm">Histórico FPTS</h3>
+              <ul className="space-y-1.5">
+                {cliente.eventos_fpts
+                  .slice()
+                  .reverse()
+                  .slice(0, 10)
+                  .map((e, i) => (
+                    <li
+                      key={i}
+                      className="p-2 rounded-md border border-[var(--color-border)] text-xs flex items-center justify-between"
+                    >
+                      <div>
+                        <span className="font-medium">{e.tipo}</span>
+                        {e.descricao && (
+                          <span className="text-[var(--color-muted)] ml-2">
+                            {e.descricao}
+                          </span>
+                        )}
+                      </div>
+                      <span
+                        className={
+                          e.pontos >= 0
+                            ? "text-[var(--color-primary)]"
+                            : "text-[var(--color-warning)]"
+                        }
+                      >
+                        {e.pontos >= 0 ? "+" : ""}
+                        {e.pontos}
+                      </span>
+                    </li>
+                  ))}
               </ul>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 

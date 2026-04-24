@@ -12,49 +12,26 @@ const sb = createClient(url, key, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-const tabelasEsperadas = [
-  "organizations",
-  "users",
-  "barbeiros",
-  "servicos",
-  "barbeiro_servicos",
-  "produtos",
-  "niveis",
-  "clientes",
-  "cliente_notas",
-  "agendamentos",
-  "pagamentos",
-  "fpts_eventos",
-  "horarios",
-  "feriados",
-  "cashback_resgates",
-  "platform_admins",
-];
+const tabelas = ["barbearias", "equipe", "clientes", "atendimentos"];
 
 console.log("→ Verificando tabelas no Supabase...\n");
 let ok = 0;
-let faltando = [];
-
-for (const t of tabelasEsperadas) {
+const faltando = [];
+for (const t of tabelas) {
   const { error } = await sb.from(t).select("id").limit(1);
   if (error) {
-    if (error.code === "42P01" || /does not exist|could not find/i.test(error.message)) {
-      faltando.push(t);
-      console.log(`  ✗ ${t} — não existe`);
-    } else {
-      console.log(`  ? ${t} — erro: ${error.message}`);
-      faltando.push(t);
-    }
+    faltando.push(t);
+    console.log(`  ✗ ${t}`);
   } else {
     ok++;
     console.log(`  ✓ ${t}`);
   }
 }
 
-console.log(`\n${ok}/${tabelasEsperadas.length} tabelas encontradas.`);
+console.log(`\n${ok}/${tabelas.length} tabelas encontradas.`);
 if (faltando.length > 0) {
-  console.log(`\nFaltando: ${faltando.join(", ")}`);
-  console.log("\nRode schema.sql no Supabase SQL Editor pra criar as que faltam.");
+  console.log(`Faltando: ${faltando.join(", ")}`);
+  console.log("Rode schema.sql no Supabase SQL Editor.");
   process.exit(1);
 }
-console.log("\nBanco pronto. Pode rodar npm run dev.");
+console.log("Banco pronto.");

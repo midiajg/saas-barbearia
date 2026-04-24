@@ -7,17 +7,9 @@ import { Input } from "@/components/ui/input";
 import * as Switch from "@radix-ui/react-switch";
 import { toast } from "sonner";
 import { salvarHorario } from "./actions";
-import type { Horario } from "@/infrastructure/database/schema";
+import type { Horario } from "@/infrastructure/database/types";
 
-const DIAS = [
-  "Domingo",
-  "Segunda",
-  "Terça",
-  "Quarta",
-  "Quinta",
-  "Sexta",
-  "Sábado",
-];
+const DIAS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
 export function HorariosForm({ horarios }: { horarios: Horario[] }) {
   const [pending, startTransition] = useTransition();
@@ -26,15 +18,17 @@ export function HorariosForm({ horarios }: { horarios: Horario[] }) {
       const h = horarios.find((x) => x.dia_semana === i);
       return {
         diaSemana: i,
-        abertura: h?.abertura?.slice(0, 5) ?? "09:00",
-        fechamento: h?.fechamento?.slice(0, 5) ?? "20:00",
+        abertura: h?.abertura ?? "09:00",
+        fechamento: h?.fechamento ?? "20:00",
         ativo: h?.ativo ?? false,
       };
     })
   );
 
   function update(idx: number, patch: Partial<(typeof state)[number]>) {
-    setState((prev) => prev.map((row, i) => (i === idx ? { ...row, ...patch } : row)));
+    setState((prev) =>
+      prev.map((row, i) => (i === idx ? { ...row, ...patch } : row))
+    );
   }
 
   function salvar(idx: number) {

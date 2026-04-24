@@ -1,11 +1,15 @@
-import { Placeholder } from "@/components/placeholder";
+import { requireDonoOuGerente } from "@/lib/auth/session";
+import { BarbeariasRepo } from "@/infrastructure/database/repositories/barbearias.repo";
+import { ProdutosClient } from "./produtos-client";
 
-export default function ProdutosPage() {
+export default async function ProdutosPage() {
+  const session = await requireDonoOuGerente();
+  const repo = new BarbeariasRepo(session.barbeariaId);
+  const barbearia = await repo.get();
   return (
-    <Placeholder
-      titulo="Produtos"
-      descricao="Catálogo de produtos com desconto por nível de fidelidade"
-      previsto="Sprint 5"
+    <ProdutosClient
+      produtos={barbearia?.config.catalogo_produtos ?? []}
+      niveis={barbearia?.config.niveis ?? []}
     />
   );
 }

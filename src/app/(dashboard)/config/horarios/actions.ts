@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireStaffSession } from "@/lib/auth/session";
-import { HorariosRepo } from "@/infrastructure/database/repositories/horarios.repo";
+import { requireDonoOuGerente } from "@/lib/auth/session";
+import { BarbeariasRepo } from "@/infrastructure/database/repositories/barbearias.repo";
+import type { Feriado, Horario } from "@/infrastructure/database/types";
 
 const horarioSchema = z.object({
   diaSemana: z.number().int().min(0).max(6),
@@ -13,15 +14,21 @@ const horarioSchema = z.object({
 });
 
 export async function salvarHorario(input: z.infer<typeof horarioSchema>) {
-  const session = await requireStaffSession();
+  const session = await requireDonoOuGerente();
   const parsed = horarioSchema.parse(input);
-  const repo = new HorariosRepo(session.orgId);
-  await repo.upsertDia({
-    diaSemana: parsed.diaSemana,
-    abertura: `${parsed.abertura}:00`,
-    fechamento: `${parsed.fechamento}:00`,
+  const repo = new BarbeariasRepo(session.barbeariaId);
+  const barbearia = await repo.get();
+  if (!barbearia) throw new Error("Barbearia não encontrada");
+
+  const atuais = barbearia.config.horarios ?? [];
+  const outros = atuais.filter((h) => h.dia_semana !== parsed.diaSemana);
+  const novo: Horario = {
+    dia_semana: parsed.diaSemana,
+    abertura: parsed.abertura,
+    fechamento: parsed.fechamento,
     ativo: parsed.ativo,
-  });
+  };
+  await repo.salvarHorarios([...outros, novo].sort((a, b) => a.dia_semana - b.dia_semana));
   revalidatePath("/config/horarios");
 }
 
@@ -31,19 +38,29 @@ const feriadoSchema = z.object({
 });
 
 export async function adicionarFeriado(formData: FormData) {
-  const session = await requireStaffSession();
+  const session = await requireDonoOuGerente();
   const parsed = feriadoSchema.parse({
     data: formData.get("data"),
     descricao: formData.get("descricao"),
   });
-  const repo = new HorariosRepo(session.orgId);
-  await repo.addFeriado(parsed);
+  const repo = new BarbeariasRepo(session.barbeariaId);
+  const barbearia = await repo.get();
+  if (!barbearia) throw new Error("Barbearia não encontrada");
+  const novos: Feriado[] = [
+    ...barbearia.config.feriados,
+    { data: parsed.data, descricao: parsed.descricao },
+  ];
+  await repo.salvarFeriados(novos);
   revalidatePath("/config/horarios");
 }
 
-export async function removerFeriado(id: string) {
-  const session = await requireStaffSession();
-  const repo = new HorariosRepo(session.orgId);
-  await repo.removeFeriado(id);
+export async function removerFeriado(data: string) {
+  const session = await requireDonoOuGerente();
+  const repo = new BarbeariasRepo(session.barbeariaId);
+  const barbearia = await repo.get();
+  if (!barbearia) throw new Error("Barbearia não encontrada");
+  await repo.salvarFeriados(
+    barbearia.config.feriados.filter((f) => f.data !== data)
+  );
   revalidatePath("/config/horarios");
 }

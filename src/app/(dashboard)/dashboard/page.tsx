@@ -1,39 +1,75 @@
 import Link from "next/link";
 import { Calendar, Users, DollarSign, TrendingUp, UserX } from "lucide-react";
-import { requireStaffSession } from "@/lib/auth/session";
-import { MetricsRepo } from "@/infrastructure/database/repositories/metrics.repo";
-import { BarbeirosRepo } from "@/infrastructure/database/repositories/barbeiros.repo";
+import { requireSession } from "@/lib/auth/session";
+import { AtendimentosRepo } from "@/infrastructure/database/repositories/atendimentos.repo";
+import { EquipeRepo } from "@/infrastructure/database/repositories/equipe.repo";
 import { ClientesRepo } from "@/infrastructure/database/repositories/clientes.repo";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatBRL, diasDesde } from "@/lib/utils";
 
 export default async function DashboardPage() {
-  const session = await requireStaffSession();
-  const metrics = new MetricsRepo(session.orgId);
-  const barbeirosRepo = new BarbeirosRepo(session.orgId);
-  const clientesRepo = new ClientesRepo(session.orgId);
+  const session = await requireSession();
+  const atRepo = new AtendimentosRepo(session.barbeariaId);
+  const equipeRepo = new EquipeRepo(session.barbeariaId);
+  const clientesRepo = new ClientesRepo(session.barbeariaId);
 
-  const [
-    agendamentosHoje,
-    { ticket, qtd: pagamentosQtd },
-    faturamentoMes,
-    clientesAtivos,
-    proximos,
-    inativos,
-    barbeiros,
-    clientes,
-  ] = await Promise.all([
-    metrics.agendamentosHoje(),
-    metrics.ticketMedioMes(),
-    metrics.faturamentoMes(),
-    metrics.clientesAtivos(),
-    metrics.proximosAgendamentos(6),
-    metrics.clientesInativos(30, 6),
-    barbeirosRepo.list({ ativosOnly: true }),
-    clientesRepo.list({ limit: 500 }),
-  ]);
+  const hoje = new Date();
+  const inicioHoje = new Date(hoje);
+  inicioHoje.setHours(0, 0, 0, 0);
+  const fimHoje = new Date(hoje);
+  fimHoje.setHours(23, 59, 59, 999);
+  const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59);
+  const umMesAFrente = new Date(hoje);
+  umMesAFrente.setDate(umMesAFrente.getDate() + 30);
 
-  const barbeirosMap = new Map(barbeiros.map((b) => [b.id, b.nome]));
+  const [atendimentosHoje, atendimentosMes, proximosAll, equipe, clientes] =
+    await Promise.all([
+      atRepo.listPorPeriodo(inicioHoje, fimHoje),
+      atRepo.listPorPeriodo(inicioMes, fimMes),
+      atRepo.listPorPeriodo(hoje, umMesAFrente),
+      equipeRepo.list({ ativosOnly: true }),
+      clientesRepo.list({ limit: 500 }),
+    ]);
+
+  const realizadosMes = atendimentosMes.filter((a) => a.status === "realizado");
+  const faturamentoMes = realizadosMes.reduce(
+    (s, a) => s + Number.parseFloat(a.valor_pago ?? "0"),
+    0
+  );
+  const qtdPagos = realizadosMes.length;
+  const ticketMedio = qtdPagos > 0 ? faturamentoMes / qtdPagos : 0;
+
+  const proximos = proximosAll
+    .filter((a) => a.status === "agendado" || a.status === "confirmado")
+    .slice(0, 6);
+
+  const agendamentosHojeAtivos = atendimentosHoje.filter(
+    (a) => a.status !== "cancelado"
+  ).length;
+
+  // Clientes ativos = visita nos últimos 60 dias
+  const corteAtivos = new Date(hoje);
+  corteAtivos.setDate(corteAtivos.getDate() - 60);
+  const ativos = clientes.filter(
+    (c) => c.ultima_visita && new Date(c.ultima_visita) >= corteAtivos
+  ).length;
+
+  // Inativos 30+ dias
+  const corteInativos = new Date(hoje);
+  corteInativos.setDate(corteInativos.getDate() - 30);
+  const inativos = clientes
+    .filter(
+      (c) => c.ultima_visita && new Date(c.ultima_visita) < corteInativos
+    )
+    .sort(
+      (a, b) =>
+        new Date(a.ultima_visita!).getTime() -
+        new Date(b.ultima_visita!).getTime()
+    )
+    .slice(0, 6);
+
+  const equipeMap = new Map(equipe.map((e) => [e.id, e.nome]));
   const clientesMap = new Map(clientes.map((c) => [c.id, c.nome]));
 
   return (
@@ -51,12 +87,12 @@ export default async function DashboardPage() {
         <KpiCard
           icon={Calendar}
           label="Agendamentos hoje"
-          value={agendamentosHoje.toString()}
+          value={agendamentosHojeAtivos.toString()}
         />
         <KpiCard
           icon={Users}
           label="Clientes ativos (60d)"
-          value={clientesAtivos.toString()}
+          value={ativos.toString()}
         />
         <KpiCard
           icon={DollarSign}
@@ -65,8 +101,8 @@ export default async function DashboardPage() {
         />
         <KpiCard
           icon={TrendingUp}
-          label={`Ticket médio (${pagamentosQtd})`}
-          value={formatBRL(ticket)}
+          label={`Ticket médio (${qtdPagos})`}
+          value={formatBRL(ticketMedio)}
         />
       </div>
 
@@ -113,7 +149,7 @@ export default async function DashboardPage() {
                             minute: "2-digit",
                           })}
                           {" · "}
-                          {barbeirosMap.get(a.barbeiro_id) ?? "—"}
+                          {equipeMap.get(a.barbeiro_id) ?? "—"}
                         </p>
                       </div>
                       {a.valor_total && (
@@ -139,7 +175,7 @@ export default async function DashboardPage() {
           <CardContent>
             {inativos.length === 0 ? (
               <p className="text-sm text-[var(--color-muted)]">
-                Nenhum cliente inativo 🎉
+                Nenhum cliente inativo
               </p>
             ) : (
               <ul className="divide-y divide-[var(--color-border)]">

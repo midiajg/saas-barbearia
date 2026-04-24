@@ -41,3 +41,8 @@ next-env.d.ts
 
 # drizzle
 /drizzle/meta
+
+# Assets de trabalho (não commitados)
+*.pdf
+1.png
+2.png

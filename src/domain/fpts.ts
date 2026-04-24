@@ -1,13 +1,5 @@
 import type { Nivel } from "@/infrastructure/database/types";
 
-export const FPTS_REGRAS = {
-  google: 500,
-  indicacao: 500,
-  instagram: 300,
-  pontualidade: 100,
-  aniversario: 200,
-} as const;
-
 export function nivelAtual(fpts: number, niveis: Nivel[]): Nivel | null {
   const ordenados = [...niveis].sort((a, b) => b.min_fpts - a.min_fpts);
   return ordenados.find((n) => fpts >= n.min_fpts) ?? null;

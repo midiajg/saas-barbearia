@@ -2,9 +2,9 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { supabaseAdmin } from "@/infrastructure/database/client";
 import { verifyPassword } from "@/lib/auth/password";
 import { createSession } from "@/lib/auth/session";
+import { buscarEquipePorEmail } from "@/infrastructure/database/repositories/equipe.repo";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -16,33 +16,20 @@ export async function loginAction(formData: FormData) {
     email: formData.get("email"),
     password: formData.get("password"),
   });
+  if (!parsed.success) throw new Error("Dados inválidos");
 
-  if (!parsed.success) {
-    throw new Error("Dados inválidos");
-  }
+  const pessoa = await buscarEquipePorEmail(parsed.data.email);
+  if (!pessoa) throw new Error("Email ou senha incorretos");
 
-  const { data: user } = await supabaseAdmin
-    .from("users")
-    .select("*")
-    .eq("email", parsed.data.email)
-    .maybeSingle();
-
-  if (!user) {
-    throw new Error("Email ou senha incorretos");
-  }
-
-  const valid = await verifyPassword(parsed.data.password, user.password_hash);
-  if (!valid) {
-    throw new Error("Email ou senha incorretos");
-  }
+  const ok = await verifyPassword(parsed.data.password, pessoa.senha_hash);
+  if (!ok) throw new Error("Email ou senha incorretos");
 
   await createSession({
-    persona: user.role,
-    userId: user.id,
-    orgId: user.org_id,
-    role: user.role,
-    email: user.email,
-    nome: user.nome,
+    equipeId: pessoa.id,
+    barbeariaId: pessoa.barbearia_id,
+    cargo: pessoa.cargo,
+    email: pessoa.email,
+    nome: pessoa.nome,
   });
 
   redirect("/dashboard");

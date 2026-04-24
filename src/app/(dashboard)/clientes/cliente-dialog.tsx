@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { criarCliente, atualizarCliente } from "./actions";
-import type { Cliente } from "@/infrastructure/database/schema";
+import type { Cliente } from "@/infrastructure/database/types";
 
 export function ClienteDialog({
   open,
@@ -24,6 +24,7 @@ export function ClienteDialog({
   editing: Cliente | null;
 }) {
   const [pending, startTransition] = useTransition();
+  const d = editing?.dados_pessoais ?? {};
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
@@ -72,7 +73,7 @@ export function ClienteDialog({
                 id="aniversario"
                 name="aniversario"
                 type="date"
-                defaultValue={editing?.aniversario ?? ""}
+                defaultValue={d.aniversario ?? ""}
               />
             </div>
           </div>
@@ -92,7 +93,7 @@ export function ClienteDialog({
             <Input
               id="endereco"
               name="endereco"
-              defaultValue={editing?.endereco ?? ""}
+              defaultValue={d.endereco ?? ""}
               placeholder="Rua, bairro..."
             />
           </div>
@@ -103,7 +104,7 @@ export function ClienteDialog({
               <Input
                 id="profissao"
                 name="profissao"
-                defaultValue={editing?.profissao ?? ""}
+                defaultValue={d.profissao ?? ""}
               />
             </div>
             <div className="space-y-2">
@@ -111,7 +112,7 @@ export function ClienteDialog({
               <Input
                 id="hobby"
                 name="hobby"
-                defaultValue={editing?.hobby ?? ""}
+                defaultValue={d.hobby ?? ""}
                 placeholder="musculação, futebol..."
               />
             </div>
@@ -122,7 +123,7 @@ export function ClienteDialog({
             <Input
               id="filhos"
               name="filhos"
-              defaultValue={editing?.filhos ?? ""}
+              defaultValue={d.filhos ?? ""}
               placeholder="Joaquim e Lara"
             />
           </div>

@@ -13,22 +13,26 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { criarAgendamentoAction } from "./actions";
+import { criarAtendimentoAction } from "./actions";
 import { formatBRL } from "@/lib/utils";
-import type { Barbeiro, Servico, Cliente } from "@/infrastructure/database/schema";
+import type {
+  CatalogoServico,
+  Cliente,
+  Equipe,
+} from "@/infrastructure/database/types";
 
 export function NovoAgendamentoDialog({
   open,
   onOpenChange,
-  barbeiros,
+  equipe,
   servicos,
   clientes,
   slotInicial,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  barbeiros: Barbeiro[];
-  servicos: Servico[];
+  equipe: Equipe[];
+  servicos: CatalogoServico[];
   clientes: Cliente[];
   slotInicial: { barbeiroId: string; inicio: Date } | null;
 }) {
@@ -43,7 +47,7 @@ export function NovoAgendamentoDialog({
 
   useEffect(() => {
     if (open) {
-      setBarbeiroId(slotInicial?.barbeiroId ?? barbeiros[0]?.id ?? "");
+      setBarbeiroId(slotInicial?.barbeiroId ?? equipe[0]?.id ?? "");
       setClienteBusca("");
       setClienteId(null);
       setServicoIds([]);
@@ -53,7 +57,7 @@ export function NovoAgendamentoDialog({
         `${String(inicio.getHours()).padStart(2, "0")}:${String(inicio.getMinutes()).padStart(2, "0")}`
       );
     }
-  }, [open, slotInicial, barbeiros]);
+  }, [open, slotInicial, equipe]);
 
   const clientesFiltrados = useMemo(
     () =>
@@ -72,10 +76,7 @@ export function NovoAgendamentoDialog({
   const totais = useMemo(() => {
     const selecionados = servicos.filter((s) => servicoIds.includes(s.id));
     const duracao = selecionados.reduce((acc, s) => acc + s.duracao_min, 0);
-    const valor = selecionados.reduce(
-      (acc, s) => acc + Number.parseFloat(s.preco_eventual),
-      0
-    );
+    const valor = selecionados.reduce((acc, s) => acc + s.preco_eventual, 0);
     return { duracao, valor, selecionados };
   }, [servicoIds, servicos]);
 
@@ -90,10 +91,9 @@ export function NovoAgendamentoDialog({
       toast.error("Preencha barbeiro, data, horário e ao menos um serviço");
       return;
     }
-
     startTransition(async () => {
       try {
-        await criarAgendamentoAction({
+        await criarAtendimentoAction({
           barbeiroId,
           clienteId,
           data,
@@ -147,7 +147,7 @@ export function NovoAgendamentoDialog({
               onChange={(e) => setBarbeiroId(e.target.value)}
               className="flex h-10 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm"
             >
-              {barbeiros.map((b) => (
+              {equipe.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.nome}
                 </option>
@@ -203,8 +203,7 @@ export function NovoAgendamentoDialog({
                 )}
                 {clienteBusca.length >= 2 && clientesFiltrados.length === 0 && (
                   <p className="text-xs text-[var(--color-muted)]">
-                    Nenhum cliente encontrado. Cadastre em /clientes (ou continue
-                    sem cliente).
+                    Nenhum cliente encontrado. Cadastre em /clientes.
                   </p>
                 )}
               </>
@@ -234,8 +233,7 @@ export function NovoAgendamentoDialog({
                       <span>{s.nome}</span>
                     </div>
                     <span className="text-xs text-[var(--color-muted)]">
-                      {s.duracao_min}min ·{" "}
-                      {formatBRL(Number.parseFloat(s.preco_eventual))}
+                      {s.duracao_min}min · {formatBRL(s.preco_eventual)}
                     </span>
                   </label>
                 ))}

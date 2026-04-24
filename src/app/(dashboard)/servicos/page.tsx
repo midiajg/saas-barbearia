@@ -1,11 +1,11 @@
-import { requireStaffSession } from "@/lib/auth/session";
-import { ServicosRepo } from "@/infrastructure/database/repositories/servicos.repo";
+import { requireDonoOuGerente } from "@/lib/auth/session";
+import { BarbeariasRepo } from "@/infrastructure/database/repositories/barbearias.repo";
 import { ServicosClient } from "./servicos-client";
 
 export default async function ServicosPage() {
-  const session = await requireStaffSession();
-  const repo = new ServicosRepo(session.orgId);
-  const servicos = await repo.list();
-
+  const session = await requireDonoOuGerente();
+  const repo = new BarbeariasRepo(session.barbeariaId);
+  const barbearia = await repo.get();
+  const servicos = barbearia?.config.catalogo_servicos ?? [];
   return <ServicosClient servicos={servicos} />;
 }
