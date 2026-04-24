@@ -15,6 +15,8 @@ import {
   Settings,
   UserCircle,
   Gem,
+  Coins,
+  Award,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Cargo } from "@/infrastructure/database/types";
@@ -78,6 +80,18 @@ const SECTIONS: NavSection[] = [
         href: "/config/horarios",
         label: "Horários",
         icon: Clock,
+        cargos: ["dono", "gerente"],
+      },
+      {
+        href: "/config/fpts",
+        label: "FPTS & Cashback",
+        icon: Coins,
+        cargos: ["dono", "gerente"],
+      },
+      {
+        href: "/config/niveis",
+        label: "Níveis",
+        icon: Award,
         cargos: ["dono", "gerente"],
       },
       {

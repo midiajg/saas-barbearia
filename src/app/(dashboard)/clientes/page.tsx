@@ -22,6 +22,15 @@ export default async function ClientesPage({
     <ClientesClient
       clientes={lista}
       niveis={barbearia?.config.niveis ?? []}
+      fptsRegras={
+        barbearia?.config.fpts_regras ?? {
+          google: 500,
+          indicacao: 500,
+          instagram: 300,
+          pontualidade: 100,
+          aniversario: 200,
+        }
+      }
       busca={params.q ?? ""}
     />
   );

@@ -73,21 +73,54 @@ export async function atualizarCliente(id: string, formData: FormData) {
   revalidatePath("/clientes");
 }
 
-export async function ajustarFpts(
+import type { TipoEventoFpts } from "@/infrastructure/database/types";
+
+export async function registrarEventoFpts(
   clienteId: string,
-  pontos: number,
-  descricao: string
+  tipo: TipoEventoFpts,
+  descricao?: string,
+  pontosOverride?: number
 ) {
   const session = await requireSession();
   const clientesRepo = new ClientesRepo(session.barbeariaId);
   const barbeariasRepo = new BarbeariasRepo(session.barbeariaId);
   const barbearia = await barbeariasRepo.get();
+  if (!barbearia) throw new Error("Barbearia não encontrada");
+
+  // Determina os pontos: regra do config pros tipos fixos, override pra ajuste manual
+  let pontos: number;
+  if (pontosOverride != null) {
+    pontos = pontosOverride;
+  } else {
+    const regras = barbearia.config.fpts_regras;
+    switch (tipo) {
+      case "google":
+        pontos = regras.google;
+        break;
+      case "indicacao":
+        pontos = regras.indicacao;
+        break;
+      case "instagram":
+        pontos = regras.instagram;
+        break;
+      case "aniversario":
+        pontos = regras.aniversario;
+        break;
+      case "pontualidade":
+        pontos = regras.pontualidade;
+        break;
+      default:
+        throw new Error("Tipo de evento exige pontos explícitos");
+    }
+  }
+
   await clientesRepo.registrarEvento(
     clienteId,
-    { tipo: "ajuste", pontos, descricao },
-    barbearia?.config.niveis ?? []
+    { tipo, pontos, descricao },
+    barbearia.config.niveis
   );
   revalidatePath("/clientes");
+  revalidatePath("/agenda");
 }
 
 export async function deletarCliente(id: string) {

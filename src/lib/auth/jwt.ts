@@ -6,13 +6,25 @@ const secret = new TextEncoder().encode(env.AUTH_SECRET);
 const ISSUER = "barbearia-sistema";
 const EXPIRES_IN = "30d";
 
-export type SessionPayload = {
+export type SessionEquipe = {
+  tipo: "equipe";
   equipeId: string;
   barbeariaId: string;
   cargo: Cargo;
   email: string;
   nome: string;
 };
+
+export type SessionCliente = {
+  tipo: "cliente";
+  clienteId: string;
+  barbeariaId: string;
+  barbeariaSlug: string;
+  email: string;
+  nome: string;
+};
+
+export type SessionPayload = SessionEquipe | SessionCliente;
 
 export async function signSession(payload: SessionPayload): Promise<string> {
   return new SignJWT({ ...payload })

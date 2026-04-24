@@ -9,15 +9,21 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ClienteDialog } from "./cliente-dialog";
 import { ClienteCardDrawer } from "./cliente-card-drawer";
 import { nivelAtual } from "@/domain/fpts";
-import type { Cliente, Nivel } from "@/infrastructure/database/types";
+import type {
+  Cliente,
+  FptsRegras,
+  Nivel,
+} from "@/infrastructure/database/types";
 
 export function ClientesClient({
   clientes,
   niveis,
+  fptsRegras,
   busca,
 }: {
   clientes: Cliente[];
   niveis: Nivel[];
+  fptsRegras: FptsRegras;
   busca: string;
 }) {
   const router = useRouter();
@@ -124,6 +130,7 @@ export function ClientesClient({
         <ClienteCardDrawer
           cliente={drawerCliente}
           nivel={nivelAtual(drawerCliente.fpts, niveis)}
+          fptsRegras={fptsRegras}
           onClose={() => setDrawerCliente(null)}
         />
       )}

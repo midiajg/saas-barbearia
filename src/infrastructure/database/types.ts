@@ -168,6 +168,8 @@ export type Cliente = {
   cashback_fpts: number;
   ultima_visita: string | null;
   eventos_fpts: EventoFpts[];
+  auth_email: string | null;
+  auth_senha_hash: string | null;
   criado_em: string;
 };
 

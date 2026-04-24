@@ -46,21 +46,27 @@ create table if not exists "[SAAS][BARBEARIA][VICTOR][equipe]" (
 create index if not exists equipe_barbearia_idx
   on "[SAAS][BARBEARIA][VICTOR][equipe]" (barbearia_id);
 
--- 3. clientes
+-- 3. clientes (auth_email + auth_senha_hash opcionais = cliente pode logar
+--    no portal /c/[slug] pra se autoagendar)
 create table if not exists "[SAAS][BARBEARIA][VICTOR][clientes]" (
-  id              uuid primary key default uuid_generate_v4(),
-  barbearia_id    uuid not null references "[SAAS][BARBEARIA][VICTOR][barbearias]"(id) on delete cascade,
-  nome            text not null,
-  telefone        text,
-  email           text,
-  foto_url        text,
-  dados_pessoais  jsonb,
-  fpts            integer not null default 0,
-  cashback_fpts   integer not null default 0,
-  ultima_visita   timestamptz,
-  eventos_fpts    jsonb not null default '[]'::jsonb,
-  criado_em       timestamptz not null default now()
+  id               uuid primary key default uuid_generate_v4(),
+  barbearia_id     uuid not null references "[SAAS][BARBEARIA][VICTOR][barbearias]"(id) on delete cascade,
+  nome             text not null,
+  telefone         text,
+  email            text,
+  foto_url         text,
+  dados_pessoais   jsonb,
+  fpts             integer not null default 0,
+  cashback_fpts    integer not null default 0,
+  ultima_visita    timestamptz,
+  eventos_fpts     jsonb not null default '[]'::jsonb,
+  auth_email       text,
+  auth_senha_hash  text,
+  criado_em        timestamptz not null default now()
 );
+create unique index if not exists clientes_auth_email_unique
+  on "[SAAS][BARBEARIA][VICTOR][clientes]" (auth_email)
+  where auth_email is not null;
 create index if not exists clientes_barbearia_idx
   on "[SAAS][BARBEARIA][VICTOR][clientes]" (barbearia_id);
 create index if not exists clientes_telefone_idx

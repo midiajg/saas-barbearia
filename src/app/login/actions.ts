@@ -25,6 +25,7 @@ export async function loginAction(formData: FormData) {
   if (!ok) throw new Error("Email ou senha incorretos");
 
   await createSession({
+    tipo: "equipe",
     equipeId: pessoa.id,
     barbeariaId: pessoa.barbearia_id,
     cargo: pessoa.cargo,

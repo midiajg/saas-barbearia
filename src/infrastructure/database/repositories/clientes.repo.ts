@@ -136,4 +136,62 @@ export class ClientesRepo extends BaseRepo {
       .eq("id", id);
     if (error) throw error;
   }
+
+  async criarComAuth(input: {
+    nome: string;
+    telefone?: string;
+    email?: string;
+    authEmail: string;
+    authSenhaHash: string;
+    dadosPessoais?: DadosPessoais;
+  }): Promise<Cliente> {
+    const { data, error } = await this.sb
+      .from(TABELAS.clientes)
+      .insert({
+        barbearia_id: this.barbeariaId,
+        nome: input.nome,
+        telefone: input.telefone,
+        email: input.email,
+        dados_pessoais: input.dadosPessoais ?? null,
+        auth_email: input.authEmail,
+        auth_senha_hash: input.authSenhaHash,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
+
+  async vincularAuth(
+    id: string,
+    authEmail: string,
+    authSenhaHash: string
+  ): Promise<void> {
+    const { error } = await this.sb
+      .from(TABELAS.clientes)
+      .update({
+        auth_email: authEmail,
+        auth_senha_hash: authSenhaHash,
+      })
+      .eq("barbearia_id", this.barbeariaId)
+      .eq("id", id);
+    if (error) throw error;
+  }
+}
+
+// Lookup público por email (sem escopo — usado no login do portal)
+import { supabaseAdmin } from "@/infrastructure/database/client";
+
+export async function buscarClientePorAuthEmail(
+  authEmail: string,
+  barbeariaId: string
+): Promise<Cliente | null> {
+  const { data, error } = await supabaseAdmin
+    .from(TABELAS.clientes)
+    .select("*")
+    .eq("barbearia_id", barbeariaId)
+    .eq("auth_email", authEmail)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
 }

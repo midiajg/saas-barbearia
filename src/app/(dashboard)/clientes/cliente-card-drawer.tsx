@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import {
   Star,
   Home,
@@ -11,27 +11,112 @@ import {
   Phone,
   X,
   Pencil,
+  Plus,
+  Minus,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ClienteDialog } from "./cliente-dialog";
+import { registrarEventoFpts } from "./actions";
 import { diasDesde } from "@/lib/utils";
-import type { Cliente, Nivel } from "@/infrastructure/database/types";
+import type {
+  Cliente,
+  FptsRegras,
+  Nivel,
+  TipoEventoFpts,
+} from "@/infrastructure/database/types";
+
+type Acao = {
+  tipo: TipoEventoFpts;
+  label: string;
+  icone: string;
+  pontos: number;
+};
 
 export function ClienteCardDrawer({
   cliente,
   nivel,
+  fptsRegras,
   onClose,
 }: {
   cliente: Cliente;
   nivel: Nivel | null;
+  fptsRegras: FptsRegras;
   onClose: () => void;
 }) {
   const [editOpen, setEditOpen] = useState(false);
+  const [pending, startTransition] = useTransition();
+  const [ajusteAberto, setAjusteAberto] = useState(false);
+  const [ajustePontos, setAjustePontos] = useState("");
+  const [ajusteDescricao, setAjusteDescricao] = useState("");
   const d = cliente.dados_pessoais ?? {};
 
   const ultimaVisitaTxt = cliente.ultima_visita
     ? `há ${diasDesde(new Date(cliente.ultima_visita))} dias`
     : "nunca";
+
+  const acoes: Acao[] = [
+    { tipo: "google", label: "Avaliou Google", icone: "⭐", pontos: fptsRegras.google },
+    {
+      tipo: "indicacao",
+      label: "Indicou amigo",
+      icone: "🤝",
+      pontos: fptsRegras.indicacao,
+    },
+    {
+      tipo: "instagram",
+      label: "Seguiu Instagram",
+      icone: "📸",
+      pontos: fptsRegras.instagram,
+    },
+    {
+      tipo: "aniversario",
+      label: "Bônus aniversário",
+      icone: "🎂",
+      pontos: fptsRegras.aniversario,
+    },
+  ];
+
+  function registrar(acao: Acao) {
+    startTransition(async () => {
+      try {
+        await registrarEventoFpts(cliente.id, acao.tipo, acao.label);
+        toast.success(`+${acao.pontos} FPTS — ${acao.label}`);
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Erro ao registrar");
+      }
+    });
+  }
+
+  function salvarAjuste() {
+    const n = Number.parseInt(ajustePontos, 10);
+    if (Number.isNaN(n) || n === 0) {
+      toast.error("Informe um número diferente de zero");
+      return;
+    }
+    if (!ajusteDescricao.trim()) {
+      toast.error("Descreva o motivo do ajuste");
+      return;
+    }
+    startTransition(async () => {
+      try {
+        await registrarEventoFpts(
+          cliente.id,
+          "ajuste",
+          ajusteDescricao.trim(),
+          n
+        );
+        toast.success(`${n > 0 ? "+" : ""}${n} FPTS registrados`);
+        setAjusteAberto(false);
+        setAjustePontos("");
+        setAjusteDescricao("");
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Erro");
+      }
+    });
+  }
 
   return (
     <>
@@ -91,6 +176,82 @@ export function ClienteCardDrawer({
             </span>
           </div>
 
+          {/* Ações FPTS */}
+          <div className="space-y-2">
+            <h3 className="text-xs uppercase tracking-wider text-[var(--color-muted)] font-semibold">
+              Dar pontos FPTS
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              {acoes.map((a) => (
+                <button
+                  key={a.tipo}
+                  onClick={() => registrar(a)}
+                  disabled={pending}
+                  className="flex items-center justify-between p-3 rounded-md border border-[var(--color-border)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 transition-colors text-left text-sm disabled:opacity-50"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="text-lg">{a.icone}</span>
+                    <span>{a.label}</span>
+                  </span>
+                  <span className="text-xs font-semibold text-[var(--color-primary)]">
+                    +{a.pontos}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {ajusteAberto ? (
+              <div className="p-3 rounded-md border border-[var(--color-border)] space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 space-y-1">
+                    <Label htmlFor="pontos" className="text-xs">
+                      Pontos (use negativo para tirar)
+                    </Label>
+                    <Input
+                      id="pontos"
+                      type="number"
+                      value={ajustePontos}
+                      onChange={(e) => setAjustePontos(e.target.value)}
+                      placeholder="100 ou -50"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="motivo" className="text-xs">
+                    Motivo
+                  </Label>
+                  <Input
+                    id="motivo"
+                    value={ajusteDescricao}
+                    onChange={(e) => setAjusteDescricao(e.target.value)}
+                    placeholder="Ex: compensação, correção, bônus..."
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setAjusteAberto(false)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button size="sm" onClick={salvarAjuste} disabled={pending}>
+                    Aplicar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setAjusteAberto(true)}
+                className="w-full flex items-center justify-center gap-2 p-2 rounded-md border border-dashed border-[var(--color-border)] text-sm text-[var(--color-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+              >
+                <Plus className="size-3.5" />
+                <Minus className="size-3.5 -ml-2" />
+                Ajuste manual
+              </button>
+            )}
+          </div>
+
           <div className="space-y-2 text-sm">
             {d.endereco && (
               <Row icon={<Home className="size-4" />} text={d.endereco} />
@@ -102,16 +263,10 @@ export function ClienteCardDrawer({
               />
             )}
             {d.filhos && (
-              <Row
-                icon={<UsersIcon className="size-4" />}
-                text={d.filhos}
-              />
+              <Row icon={<UsersIcon className="size-4" />} text={d.filhos} />
             )}
             {d.profissao && (
-              <Row
-                icon={<Briefcase className="size-4" />}
-                text={d.profissao}
-              />
+              <Row icon={<Briefcase className="size-4" />} text={d.profissao} />
             )}
             {d.hobby && (
               <Row icon={<Dumbbell className="size-4" />} text={d.hobby} />

@@ -105,6 +105,7 @@ export async function signupAction(formData: FormData) {
   });
 
   await createSession({
+    tipo: "equipe",
     equipeId: pessoa.id,
     barbeariaId: barbearia.id,
     cargo: "dono",
