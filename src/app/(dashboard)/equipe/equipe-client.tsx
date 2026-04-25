@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { criarPessoa, atualizarPessoa } from "./actions";
 import { FotoUpload } from "@/components/foto-upload";
+import { Eyebrow, DoubleRule } from "@/components/editorial";
 import type { Cargo, Equipe } from "@/infrastructure/database/types";
 
 const CARGO_LABEL: Record<Cargo, string> = {
@@ -29,70 +29,87 @@ export function EquipeClient({ equipe }: { equipe: Equipe[] }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-display">Equipe</h1>
-          <p className="text-sm text-[var(--color-muted)]">
-            Barbeiros, gerentes e donos que atendem ou acessam o sistema
-          </p>
+      <header>
+        <DoubleRule />
+        <div className="py-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <Eyebrow marker className="mb-2">
+              Catálogo · Equipe
+            </Eyebrow>
+            <h1 className="display-serif text-3xl sm:text-4xl">
+              Quem corta, quem <em className="display-italic">gere.</em>
+            </h1>
+          </div>
+          <div className="flex items-center gap-3 self-start sm:self-end">
+            <p className="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-muted)] tabular-nums">
+              {equipe.length.toString().padStart(2, "0")}{" "}
+              <span className="text-[var(--color-muted-foreground)]">pessoas</span>
+            </p>
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setOpen(true);
+              }}
+              className="rounded-none h-9 font-mono tracking-widest text-[10px] uppercase"
+            >
+              <Plus className="size-3.5" /> Nova
+            </Button>
+          </div>
         </div>
-        <Button
-          onClick={() => {
-            setEditing(null);
-            setOpen(true);
-          }}
-          className="self-start sm:self-auto"
-        >
-          <Plus className="size-4" /> Nova pessoa
-        </Button>
-      </div>
+        <DoubleRule />
+      </header>
 
       {equipe.length === 0 ? (
-        <Card>
-          <CardContent className="p-10 text-center">
-            <UserCircle className="size-10 mx-auto mb-3 text-[var(--color-muted)]" />
-            <p className="text-[var(--color-muted)]">Ninguém cadastrado ainda.</p>
-          </CardContent>
-        </Card>
+        <div className="hairline-t hairline-b py-16 text-center space-y-4">
+          <UserCircle className="size-8 mx-auto text-[var(--color-muted-foreground)]" />
+          <p className="display-serif text-2xl">
+            Nenhuma <em className="display-italic">pessoa cadastrada.</em>
+          </p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <ul className="hairline-t hairline-b">
           {equipe.map((p) => (
-            <Card key={p.id} className={p.ativo ? "" : "opacity-50"}>
-              <CardContent className="p-5 flex items-start gap-3">
+            <li
+              key={p.id}
+              className={`hairline-b last:border-b-0 ${p.ativo ? "" : "opacity-50"}`}
+            >
+              <button
+                onClick={() => {
+                  setEditing(p);
+                  setOpen(true);
+                }}
+                className="w-full text-left px-1 py-3 sm:py-4 flex items-center gap-4 transition-all hover:px-3 hover:bg-[var(--color-surface)]/40"
+              >
                 <div
-                  className="size-12 rounded-full flex items-center justify-center text-white font-medium shrink-0"
+                  className="size-11 flex items-center justify-center text-white font-display text-lg shrink-0"
                   style={{ backgroundColor: p.cor }}
                 >
                   {p.nome.slice(0, 1).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{p.nome}</p>
-                  <p className="text-xs text-[var(--color-muted)] truncate">
-                    {p.email}
-                  </p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
+                  <div className="flex items-baseline gap-2">
+                    <p className="font-medium truncate">{p.nome}</p>
+                    <span className="font-mono text-[9px] tracking-[0.22em] uppercase text-[var(--color-primary)] shrink-0">
                       {CARGO_LABEL[p.cargo]}
                     </span>
-                    <span className="text-xs text-[var(--color-muted)]">
-                      {Number.parseFloat(p.comissao_pct).toFixed(0)}% comissão
-                    </span>
                   </div>
+                  <p className="font-mono text-[10px] tracking-widest uppercase text-[var(--color-muted)] mt-0.5 truncate">
+                    {p.email}
+                  </p>
                 </div>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => {
-                    setEditing(p);
-                    setOpen(true);
-                  }}
-                >
-                  <Pencil className="size-4" />
-                </Button>
-              </CardContent>
-            </Card>
+                <div className="text-right shrink-0">
+                  <p className="font-mono tabular-nums text-sm">
+                    {Number.parseFloat(p.comissao_pct).toFixed(0)}%
+                  </p>
+                  <p className="font-mono text-[9px] tracking-widest uppercase text-[var(--color-muted)] mt-0.5">
+                    Comissão
+                  </p>
+                </div>
+                <Pencil className="size-3.5 text-[var(--color-muted)] shrink-0 hidden sm:block" />
+              </button>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
 
       <PessoaDialog open={open} onOpenChange={setOpen} editing={editing} />

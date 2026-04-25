@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { criarProduto, atualizarProduto, deletarProduto } from "./actions";
 import { formatBRL } from "@/lib/utils";
+import { Eyebrow, DoubleRule } from "@/components/editorial";
 import type { CatalogoProduto, Nivel } from "@/infrastructure/database/types";
 
 export function ProdutosClient({
@@ -29,70 +29,83 @@ export function ProdutosClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-display">Produtos</h1>
-          <p className="text-sm text-[var(--color-muted)]">
-            Catálogo com desconto por nível de fidelidade
-          </p>
+      <header>
+        <DoubleRule />
+        <div className="py-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <Eyebrow marker className="mb-2">
+              Catálogo · Produtos
+            </Eyebrow>
+            <h1 className="display-serif text-3xl sm:text-4xl leading-tight">
+              Vendido <em className="display-italic">na cadeira.</em>
+            </h1>
+          </div>
+          <Button
+            onClick={() => {
+              setEditing(null);
+              setOpen(true);
+            }}
+            className="self-start sm:self-end rounded-none h-9 font-mono tracking-widest text-[10px] uppercase"
+          >
+            <Plus className="size-3.5" /> Novo
+          </Button>
         </div>
-        <Button
-          onClick={() => {
-            setEditing(null);
-            setOpen(true);
-          }}
-          className="self-start sm:self-auto"
-        >
-          <Plus className="size-4" /> Novo produto
-        </Button>
-      </div>
+        <DoubleRule />
+      </header>
 
       {produtos.length === 0 ? (
-        <Card>
-          <CardContent className="p-10 text-center">
-            <Package className="size-10 mx-auto mb-3 text-[var(--color-muted)]" />
-            <p className="text-[var(--color-muted)]">
-              Nenhum produto cadastrado ainda.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="hairline-t hairline-b py-16 text-center space-y-3">
+          <Package className="size-8 mx-auto text-[var(--color-muted-foreground)]" />
+          <p className="display-serif text-2xl">
+            Catálogo <em className="display-italic">vazio.</em>
+          </p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-[var(--color-hairline)] border border-[var(--color-hairline)]">
           {produtos.map((p) => (
-            <Card key={p.id} className={p.ativo ? "" : "opacity-50"}>
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="min-w-0">
-                    <p className="font-medium truncate">{p.nome}</p>
-                    {p.descricao && (
-                      <p className="text-xs text-[var(--color-muted)] truncate">
-                        {p.descricao}
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => {
-                      setEditing(p);
-                      setOpen(true);
-                    }}
-                  >
-                    <Pencil className="size-4" />
-                  </Button>
+            <div
+              key={p.id}
+              className={`bg-[var(--color-background)] p-5 ${p.ativo ? "" : "opacity-50"}`}
+            >
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div className="min-w-0">
+                  <p className="display-serif text-xl truncate leading-tight">
+                    {p.nome}
+                  </p>
+                  {p.descricao && (
+                    <p className="font-mono text-[10px] tracking-widest uppercase text-[var(--color-muted)] mt-1 truncate">
+                      {p.descricao}
+                    </p>
+                  )}
                 </div>
-                <div className="flex items-baseline justify-between mb-2">
-                  <span className="text-xs text-[var(--color-muted)]">Preço</span>
-                  <span className="text-lg font-semibold text-[var(--color-primary)]">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => {
+                    setEditing(p);
+                    setOpen(true);
+                  }}
+                  className="rounded-none border border-transparent hover:border-[var(--color-hairline)]"
+                >
+                  <Pencil className="size-3.5" />
+                </Button>
+              </div>
+
+              <div className="hairline-t hairline-b py-3 space-y-2">
+                <div className="flex items-baseline justify-between">
+                  <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-muted)]">
+                    Preço
+                  </span>
+                  <span className="font-mono tabular-nums text-base text-[var(--color-primary)]">
                     {formatBRL(p.preco)}
                   </span>
                 </div>
-                <div className="flex items-baseline justify-between mb-3">
-                  <span className="text-xs text-[var(--color-muted)]">
+                <div className="flex items-baseline justify-between">
+                  <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-muted)]">
                     Estoque
                   </span>
                   <span
-                    className={`text-sm font-medium ${
+                    className={`font-mono tabular-nums text-sm ${
                       p.estoque === 0
                         ? "text-[var(--color-destructive)]"
                         : p.estoque < 5
@@ -100,31 +113,32 @@ export function ProdutosClient({
                           : ""
                     }`}
                   >
-                    {p.estoque}
+                    {p.estoque} un.
                   </span>
                 </div>
-                {p.desconto_por_nivel &&
-                  Object.keys(p.desconto_por_nivel).length > 0 && (
-                    <div className="pt-3 border-t border-[var(--color-border)] space-y-1">
-                      <p className="text-[10px] uppercase tracking-wider text-[var(--color-muted)]">
-                        Desconto por nível
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {Object.entries(p.desconto_por_nivel).map(
-                          ([nivel, pct]) => (
-                            <span
-                              key={nivel}
-                              className="text-xs px-2 py-0.5 rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-                            >
-                              N{nivel}: {pct}%
-                            </span>
-                          )
-                        )}
-                      </div>
+              </div>
+
+              {p.desconto_por_nivel &&
+                Object.keys(p.desconto_por_nivel).length > 0 && (
+                  <div className="mt-3">
+                    <p className="font-mono text-[9px] tracking-[0.22em] uppercase text-[var(--color-muted)] mb-2">
+                      Desconto · por nível
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(p.desconto_por_nivel).map(
+                        ([nivel, pct]) => (
+                          <span
+                            key={nivel}
+                            className="font-mono text-[10px] tracking-widest tabular-nums px-2 py-0.5 bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
+                          >
+                            N{nivel} · {pct}%
+                          </span>
+                        )
+                      )}
                     </div>
-                  )}
-              </CardContent>
-            </Card>
+                  </div>
+                )}
+            </div>
           ))}
         </div>
       )}

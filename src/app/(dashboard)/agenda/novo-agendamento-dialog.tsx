@@ -111,55 +111,63 @@ export function NovoAgendamentoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-auto">
-        <DialogHeader>
-          <DialogTitle>Novo agendamento</DialogTitle>
-          <DialogDescription>
-            Selecione cliente, barbeiro e serviços
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-auto rounded-none border-[var(--color-hairline)] bg-[var(--color-background)]">
+        <DialogHeader className="space-y-3">
+          <p className="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-muted)]">
+            Novo agendamento · Manual
+          </p>
+          <div className="h-px bg-[var(--color-foreground)]/40" />
+          <DialogTitle className="display-serif text-2xl">
+            Marcar <em className="display-italic">novo horário.</em>
+          </DialogTitle>
+          <DialogDescription className="font-mono text-[10px] tracking-widest uppercase text-[var(--color-muted)]">
+            Cliente · Profissional · Serviços
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>Data</Label>
+            <div className="space-y-2">
+              <Label className="eyebrow">Data</Label>
               <Input
                 type="date"
                 value={data}
                 onChange={(e) => setData(e.target.value)}
+                className="h-10 rounded-none bg-transparent border-[var(--color-hairline)] focus-visible:border-[var(--color-primary)]"
               />
             </div>
-            <div className="space-y-1">
-              <Label>Horário</Label>
+            <div className="space-y-2">
+              <Label className="eyebrow">Horário</Label>
               <Input
                 type="time"
                 value={horario}
                 onChange={(e) => setHorario(e.target.value)}
                 step={60 * 5}
+                className="h-10 rounded-none bg-transparent border-[var(--color-hairline)] focus-visible:border-[var(--color-primary)] font-mono tabular-nums"
               />
             </div>
           </div>
 
-          <div className="space-y-1">
-            <Label>Barbeiro</Label>
+          <div className="space-y-2">
+            <Label className="eyebrow">Profissional</Label>
             <select
               value={barbeiroId}
               onChange={(e) => setBarbeiroId(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm"
+              className="flex h-10 w-full rounded-none border border-[var(--color-hairline)] bg-transparent px-3 text-sm focus:border-[var(--color-primary)] focus:outline-none"
             >
               {equipe.map((b) => (
-                <option key={b.id} value={b.id}>
+                <option key={b.id} value={b.id} className="bg-[var(--color-background)]">
                   {b.nome}
                 </option>
               ))}
             </select>
           </div>
 
-          <div className="space-y-1">
-            <Label>Cliente</Label>
+          <div className="space-y-2">
+            <Label className="eyebrow">Cliente</Label>
             {clienteId ? (
-              <div className="flex items-center justify-between p-2 rounded-md border border-[var(--color-border)]">
-                <span className="text-sm">
+              <div className="flex items-center justify-between px-3 py-2 border border-[var(--color-hairline)]">
+                <span className="text-sm font-medium">
                   {clientes.find((c) => c.id === clienteId)?.nome}
                 </span>
                 <Button
@@ -169,6 +177,7 @@ export function NovoAgendamentoDialog({
                     setClienteId(null);
                     setClienteBusca("");
                   }}
+                  className="rounded-none font-mono tracking-widest text-[10px] uppercase"
                 >
                   Trocar
                 </Button>
@@ -179,93 +188,106 @@ export function NovoAgendamentoDialog({
                   placeholder="Digite ao menos 2 letras..."
                   value={clienteBusca}
                   onChange={(e) => setClienteBusca(e.target.value)}
+                  className="h-10 rounded-none bg-transparent border-[var(--color-hairline)] focus-visible:border-[var(--color-primary)]"
                 />
                 {clientesFiltrados.length > 0 && (
-                  <div className="border border-[var(--color-border)] rounded-md mt-1 max-h-40 overflow-auto">
+                  <ul className="border border-[var(--color-hairline)] mt-1 max-h-40 overflow-auto">
                     {clientesFiltrados.map((c) => (
-                      <button
-                        key={c.id}
-                        onClick={() => {
-                          setClienteId(c.id);
-                          setClienteBusca(c.nome);
-                        }}
-                        className="block w-full text-left p-2 text-sm hover:bg-[var(--color-surface-hover)]"
-                      >
-                        {c.nome}
-                        {c.telefone && (
-                          <span className="text-[var(--color-muted)] ml-2 text-xs">
-                            {c.telefone}
-                          </span>
-                        )}
-                      </button>
+                      <li key={c.id} className="hairline-b last:border-b-0">
+                        <button
+                          onClick={() => {
+                            setClienteId(c.id);
+                            setClienteBusca(c.nome);
+                          }}
+                          className="block w-full text-left p-2.5 text-sm hover:bg-[var(--color-surface)] flex items-baseline justify-between gap-3"
+                        >
+                          <span className="font-medium truncate">{c.nome}</span>
+                          {c.telefone && (
+                            <span className="font-mono text-[10px] tracking-widest uppercase text-[var(--color-muted)] shrink-0">
+                              {c.telefone}
+                            </span>
+                          )}
+                        </button>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 )}
                 {clienteBusca.length >= 2 && clientesFiltrados.length === 0 && (
-                  <p className="text-xs text-[var(--color-muted)]">
-                    Nenhum cliente encontrado. Cadastre em /clientes.
+                  <p className="font-mono text-[10px] tracking-widest uppercase text-[var(--color-muted)] italic">
+                    Nenhum encontrado · Cadastre em /clientes
                   </p>
                 )}
               </>
             )}
           </div>
 
-          <div className="space-y-1">
-            <Label>Serviços</Label>
+          <div className="space-y-2">
+            <Label className="eyebrow">Serviços</Label>
             {servicos.length === 0 ? (
-              <p className="text-xs text-[var(--color-muted)]">
-                Cadastre serviços primeiro em /servicos
+              <p className="font-mono text-[10px] tracking-widest uppercase text-[var(--color-muted)] italic">
+                Cadastre primeiro em /serviços
               </p>
             ) : (
-              <div className="grid grid-cols-1 gap-1 max-h-40 overflow-auto p-2 border border-[var(--color-border)] rounded-md">
-                {servicos.map((s) => (
-                  <label
-                    key={s.id}
-                    className="flex items-center justify-between gap-2 text-sm cursor-pointer hover:bg-[var(--color-surface-hover)] p-1 rounded"
-                  >
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={servicoIds.includes(s.id)}
-                        onChange={() => toggleServico(s.id)}
-                        className="size-4"
-                      />
-                      <span>{s.nome}</span>
-                    </div>
-                    <span className="text-xs text-[var(--color-muted)]">
-                      {s.duracao_min}min · {formatBRL(s.preco_eventual)}
-                    </span>
-                  </label>
-                ))}
-              </div>
+              <ul className="border border-[var(--color-hairline)] max-h-44 overflow-auto">
+                {servicos.map((s) => {
+                  const sel = servicoIds.includes(s.id);
+                  return (
+                    <li key={s.id} className="hairline-b last:border-b-0">
+                      <label
+                        className={`flex items-center justify-between gap-3 text-sm cursor-pointer p-2.5 transition-colors ${
+                          sel ? "bg-[var(--color-primary)]/5" : "hover:bg-[var(--color-surface)]"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <input
+                            type="checkbox"
+                            checked={sel}
+                            onChange={() => toggleServico(s.id)}
+                            className="size-4"
+                          />
+                          <span className="truncate">{s.nome}</span>
+                        </div>
+                        <span className="font-mono text-[10px] tracking-widest uppercase text-[var(--color-muted)] tabular-nums shrink-0">
+                          {s.duracao_min}min · {formatBRL(s.preco_eventual)}
+                        </span>
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </div>
 
           {totais.selecionados.length > 0 && (
-            <div className="flex items-center justify-between p-3 rounded-md bg-[var(--color-primary)]/5 border border-[var(--color-primary)]/20 text-sm">
+            <div className="hairline-t hairline-b py-3 flex items-baseline justify-between">
               <div>
-                <p className="text-[var(--color-muted)] text-xs">
-                  Duração estimada
+                <p className="font-mono text-[9px] tracking-[0.22em] uppercase text-[var(--color-muted)]">
+                  Subtotal estimado
                 </p>
-                <p className="font-medium">{totais.duracao} min</p>
-              </div>
-              <div className="text-right">
-                <p className="text-[var(--color-muted)] text-xs">
-                  Valor estimado
-                </p>
-                <p className="font-medium text-[var(--color-primary)]">
-                  {formatBRL(totais.valor)}
+                <p className="font-mono tabular-nums text-sm mt-1">
+                  {totais.duracao} min
                 </p>
               </div>
+              <p className="display-num text-2xl text-[var(--color-primary)] font-light">
+                {formatBRL(totais.valor)}
+              </p>
             </div>
           )}
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="rounded-none h-11 font-mono tracking-widest text-[10px] uppercase border-[var(--color-hairline)]"
+            >
               Cancelar
             </Button>
-            <Button onClick={submeter} disabled={pending}>
-              {pending ? "Salvando..." : "Agendar"}
+            <Button
+              onClick={submeter}
+              disabled={pending}
+              className="rounded-none h-11 font-mono tracking-widest text-[10px] uppercase"
+            >
+              {pending ? "Salvando..." : "Agendar →"}
             </Button>
           </div>
         </div>

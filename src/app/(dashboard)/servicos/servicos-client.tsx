@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Scissors } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { criarServico, atualizarServico, deletarServico } from "./actions";
 import { formatBRL } from "@/lib/utils";
+import { Eyebrow, DoubleRule } from "@/components/editorial";
 import type { CatalogoServico } from "@/infrastructure/database/types";
 
 export function ServicosClient({ servicos }: { servicos: CatalogoServico[] }) {
@@ -23,62 +23,70 @@ export function ServicosClient({ servicos }: { servicos: CatalogoServico[] }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-display">Serviços</h1>
-          <p className="text-sm text-[var(--color-muted)]">
-            Catálogo com 3 preços: quem volta mais, paga menos
-          </p>
+      <header>
+        <DoubleRule />
+        <div className="py-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <Eyebrow marker className="mb-2">
+              Catálogo · Serviços
+            </Eyebrow>
+            <h1 className="display-serif text-3xl sm:text-4xl leading-tight">
+              Quem volta mais,{" "}
+              <em className="display-italic">paga menos.</em>
+            </h1>
+          </div>
+          <Button
+            onClick={() => {
+              setEditing(null);
+              setOpen(true);
+            }}
+            className="self-start sm:self-end rounded-none h-9 font-mono tracking-widest text-[10px] uppercase"
+          >
+            <Plus className="size-3.5" /> Novo
+          </Button>
         </div>
-        <Button
-          onClick={() => {
-            setEditing(null);
-            setOpen(true);
-          }}
-          className="self-start sm:self-auto"
-        >
-          <Plus className="size-4" /> Novo serviço
-        </Button>
-      </div>
+        <DoubleRule />
+      </header>
 
       {servicos.length === 0 ? (
-        <Card>
-          <CardContent className="p-10 text-center">
-            <p className="text-[var(--color-muted)]">
-              Nenhum serviço cadastrado ainda.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="hairline-t hairline-b py-16 text-center space-y-3">
+          <Scissors className="size-8 mx-auto text-[var(--color-muted-foreground)]" />
+          <p className="display-serif text-2xl">
+            Catálogo <em className="display-italic">vazio.</em>
+          </p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-[var(--color-hairline)] border border-[var(--color-hairline)]">
           {servicos.map((s) => (
-            <Card key={s.id} className={s.ativo ? "" : "opacity-50"}>
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div>
-                    <p className="font-medium">{s.nome}</p>
-                    <p className="text-xs text-[var(--color-muted)]">
-                      {s.duracao_min} min
-                    </p>
-                  </div>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => {
-                      setEditing(s);
-                      setOpen(true);
-                    }}
-                  >
-                    <Pencil className="size-4" />
-                  </Button>
+            <div
+              key={s.id}
+              className={`bg-[var(--color-background)] p-5 ${s.ativo ? "" : "opacity-50"}`}
+            >
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div className="min-w-0">
+                  <p className="display-serif text-xl truncate">{s.nome}</p>
+                  <p className="font-mono text-[10px] tracking-widest uppercase text-[var(--color-muted)] mt-1 tabular-nums">
+                    {s.duracao_min} min · serviço
+                  </p>
                 </div>
-                <div className="grid grid-cols-3 gap-2 text-center text-sm">
-                  <PrecoBox label="Quinzenal" valor={s.preco_quinzenal} highlight />
-                  <PrecoBox label="Mensal" valor={s.preco_mensal} />
-                  <PrecoBox label="Eventual" valor={s.preco_eventual} />
-                </div>
-              </CardContent>
-            </Card>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => {
+                    setEditing(s);
+                    setOpen(true);
+                  }}
+                  className="rounded-none border border-transparent hover:border-[var(--color-hairline)]"
+                >
+                  <Pencil className="size-3.5" />
+                </Button>
+              </div>
+              <div className="grid grid-cols-3 gap-px bg-[var(--color-hairline)]">
+                <PrecoBox label="Quinzenal" valor={s.preco_quinzenal} highlight />
+                <PrecoBox label="Mensal" valor={s.preco_mensal} />
+                <PrecoBox label="Eventual" valor={s.preco_eventual} />
+              </div>
+            </div>
           ))}
         </div>
       )}
@@ -99,17 +107,15 @@ function PrecoBox({
 }) {
   return (
     <div
-      className={`p-2 rounded-md border ${
-        highlight
-          ? "border-[var(--color-primary)]/40 bg-[var(--color-primary)]/5"
-          : "border-[var(--color-border)]"
+      className={`bg-[var(--color-background)] p-3 ${
+        highlight ? "bg-[var(--color-primary)]/5" : ""
       }`}
     >
-      <p className="text-[10px] uppercase tracking-wider text-[var(--color-muted)]">
+      <p className="font-mono text-[9px] tracking-[0.22em] uppercase text-[var(--color-muted)]">
         {label}
       </p>
       <p
-        className={`font-medium ${
+        className={`font-mono tabular-nums text-sm mt-1 ${
           highlight ? "text-[var(--color-primary)]" : ""
         }`}
       >

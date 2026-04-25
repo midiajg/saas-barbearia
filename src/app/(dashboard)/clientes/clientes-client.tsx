@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { Plus, Search, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import { ClienteDialog } from "./cliente-dialog";
 import { ClienteCardDrawer } from "./cliente-card-drawer";
 import { nivelAtual } from "@/domain/fpts";
+import { Eyebrow, DoubleRule } from "@/components/editorial";
 import type {
   CatalogoServico,
   Cliente,
@@ -47,83 +47,110 @@ export function ClientesClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-display">Clientes</h1>
-          <p className="text-sm text-[var(--color-muted)]">
-            Cada cliente é uma história. Não esqueça nenhuma.
-          </p>
+      <header>
+        <DoubleRule />
+        <div className="py-4 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+          <div>
+            <Eyebrow marker className="mb-2">
+              Catálogo · Clientes
+            </Eyebrow>
+            <h1 className="display-serif text-3xl sm:text-4xl">
+              Cada cliente, <em className="display-italic">uma história.</em>
+            </h1>
+          </div>
+          <div className="flex items-center gap-3 self-start sm:self-end">
+            <p className="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-muted)] tabular-nums">
+              {clientes.length.toString().padStart(3, "0")}{" "}
+              <span className="text-[var(--color-muted-foreground)]">cadastrados</span>
+            </p>
+            <Button
+              onClick={() => setOpenNovo(true)}
+              className="rounded-none h-9 font-mono tracking-widest text-[10px] uppercase"
+            >
+              <Plus className="size-3.5" /> Novo
+            </Button>
+          </div>
         </div>
-        <Button onClick={() => setOpenNovo(true)} className="self-start sm:self-auto">
-          <Plus className="size-4" /> Novo cliente
-        </Button>
-      </div>
+        <DoubleRule />
+      </header>
 
       <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[var(--color-muted)]" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-[var(--color-muted)]" />
         <Input
           placeholder="Buscar por nome ou telefone..."
           value={buscaLocal}
           onChange={(e) => aplicarBusca(e.target.value)}
-          className="pl-9"
+          className="pl-9 h-10 rounded-none bg-transparent border-[var(--color-hairline)] focus-visible:border-[var(--color-primary)]"
         />
       </div>
 
       {clientes.length === 0 ? (
-        <Card>
-          <CardContent className="p-10 text-center">
-            <p className="text-[var(--color-muted)] mb-3">
-              {busca
-                ? "Nenhum cliente encontrado para esta busca."
-                : "Nenhum cliente cadastrado ainda."}
-            </p>
-            <Button onClick={() => setOpenNovo(true)}>
-              <Plus className="size-4" /> Cadastrar cliente
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="hairline-t hairline-b py-16 text-center space-y-4">
+          <Eyebrow className="justify-center">
+            {busca ? "Nada encontrado" : "Lista vazia"}
+          </Eyebrow>
+          <p className="display-serif text-2xl">
+            {busca ? (
+              <>
+                Não encontramos <em className="display-italic">"{busca}"</em>
+              </>
+            ) : (
+              <>
+                Comece <em className="display-italic">do zero.</em>
+              </>
+            )}
+          </p>
+          <Button
+            onClick={() => setOpenNovo(true)}
+            className="rounded-none h-10 font-mono tracking-widest text-[10px] uppercase"
+          >
+            <Plus className="size-3.5" /> Cadastrar primeiro cliente
+          </Button>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        <ul className="hairline-t hairline-b">
           {clientes.map((c) => {
             const nivel = nivelAtual(c.fpts, niveis);
             return (
-              <button
-                key={c.id}
-                onClick={() => setDrawerCliente(c)}
-                className="text-left"
-              >
-                <Card className="hover:border-[var(--color-primary)]/40 transition-colors h-full">
-                  <CardContent className="p-4 flex items-start gap-3">
-                    <div className="size-12 rounded-full bg-[var(--color-primary)]/15 text-[var(--color-primary)] flex items-center justify-center font-medium shrink-0">
-                      {c.nome.slice(0, 1).toUpperCase()}
-                    </div>
-                    <div className="min-w-0 flex-1">
+              <li key={c.id} className="hairline-b last:border-b-0">
+                <button
+                  onClick={() => setDrawerCliente(c)}
+                  className="w-full text-left px-1 py-3 sm:py-4 flex items-center gap-4 transition-all hover:px-3 hover:bg-[var(--color-surface)]/40 group"
+                >
+                  <div className="size-10 sm:size-11 bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-display text-lg shrink-0">
+                    {c.nome.slice(0, 1).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline gap-2">
                       <p className="font-medium truncate">{c.nome}</p>
-                      <p className="text-xs text-[var(--color-muted)]">
-                        {c.telefone ?? "Sem telefone"}
-                      </p>
-                      <div className="flex items-center gap-1 mt-1.5">
-                        {nivel ? (
-                          <div className="flex items-center gap-0.5">
-                            {Array.from({ length: nivel.numero }).map((_, i) => (
-                              <Star
-                                key={i}
-                                className="size-3 fill-yellow-400 text-yellow-400"
-                              />
-                            ))}
-                          </div>
-                        ) : null}
-                        <span className="text-[10px] text-[var(--color-muted)] ml-1">
-                          {c.fpts} FPTS
+                      {nivel && (
+                        <span className="hidden sm:inline-flex items-center gap-0.5 shrink-0">
+                          {Array.from({ length: nivel.numero }).map((_, i) => (
+                            <Star
+                              key={i}
+                              className="size-2.5 fill-[var(--color-warning)] text-[var(--color-warning)]"
+                            />
+                          ))}
                         </span>
-                      </div>
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
-              </button>
+                    <p className="font-mono text-[10px] tracking-widest uppercase text-[var(--color-muted)] mt-0.5">
+                      {c.telefone ?? "Sem telefone"}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="font-mono tabular-nums text-sm text-[var(--color-primary)]">
+                      {c.fpts}
+                    </p>
+                    <p className="font-mono text-[9px] tracking-widest uppercase text-[var(--color-muted)] mt-0.5">
+                      FPTS
+                    </p>
+                  </div>
+                </button>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
 
       <ClienteDialog
