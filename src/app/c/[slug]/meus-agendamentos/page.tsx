@@ -10,26 +10,9 @@ import { supabaseAdmin } from "@/infrastructure/database/client";
 import { TABELAS } from "@/infrastructure/database/tabelas";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatBRL } from "@/lib/utils";
 import type { Atendimento } from "@/infrastructure/database/types";
-
-const STATUS_LABEL: Record<string, string> = {
-  agendado: "Agendado",
-  confirmado: "Confirmado",
-  em_atendimento: "Em atendimento",
-  realizado: "Realizado",
-  no_show: "Não compareceu",
-  cancelado: "Cancelado",
-};
-
-const STATUS_COR: Record<string, string> = {
-  agendado: "bg-[var(--color-primary)]/15 text-[var(--color-primary)]",
-  confirmado: "bg-[var(--color-primary)]/25 text-[var(--color-primary)]",
-  em_atendimento: "bg-[var(--color-warning)]/20 text-[var(--color-warning)]",
-  realizado: "bg-[var(--color-success)]/20 text-[var(--color-success)]",
-  no_show: "bg-[var(--color-destructive)]/20 text-[var(--color-destructive)]",
-  cancelado: "bg-[var(--color-muted)]/20 text-[var(--color-muted)]",
-};
+import { AgendamentoItem } from "./agendamento-item";
+import { LinkIndicacao } from "./link-indicacao";
 
 export default async function MeusAgendamentosPage({
   params,
@@ -83,23 +66,30 @@ export default async function MeusAgendamentosPage({
 
       {cliente && (
         <Card>
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs text-[var(--color-muted)]">Seu saldo</p>
-              <p className="text-xl font-display">
-                {cliente.fpts} FPTS
-                {cliente.cashback_fpts > 0 && (
-                  <span className="text-xs text-[var(--color-muted)] ml-2">
-                    ({cliente.cashback_fpts} em cashback)
-                  </span>
-                )}
-              </p>
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-[var(--color-muted)]">Seu saldo</p>
+                <p className="text-xl font-display">
+                  {cliente.fpts} FPTS
+                  {cliente.cashback_fpts > 0 && (
+                    <span className="text-xs text-[var(--color-muted)] ml-2">
+                      ({cliente.cashback_fpts} em cashback)
+                    </span>
+                  )}
+                </p>
+              </div>
+              <Button asChild size="sm">
+                <Link href={`/c/${slug}/agendar`}>
+                  <Plus className="size-4" /> Novo
+                </Link>
+              </Button>
             </div>
-            <Button asChild size="sm">
-              <Link href={`/c/${slug}/agendar`}>
-                <Plus className="size-4" /> Novo
-              </Link>
-            </Button>
+            <LinkIndicacao
+              slug={slug}
+              clienteId={cliente.id}
+              pontos={barbearia.config.fpts_regras.indicacao}
+            />
           </CardContent>
         </Card>
       )}
@@ -123,7 +113,13 @@ export default async function MeusAgendamentosPage({
         ) : (
           <div className="space-y-2">
             {proximos.map((a) => (
-              <Agendamento key={a.id} atendimento={a} barbeiroNome={equipeMap.get(a.barbeiro_id) ?? ""} />
+              <AgendamentoItem
+                key={a.id}
+                atendimento={a}
+                barbeiroNome={equipeMap.get(a.barbeiro_id) ?? ""}
+                slug={slug}
+                podeCancelar={proximos.includes(a)}
+              />
             ))}
           </div>
         )}
@@ -136,7 +132,13 @@ export default async function MeusAgendamentosPage({
           </h2>
           <div className="space-y-2">
             {historico.map((a) => (
-              <Agendamento key={a.id} atendimento={a} barbeiroNome={equipeMap.get(a.barbeiro_id) ?? ""} />
+              <AgendamentoItem
+                key={a.id}
+                atendimento={a}
+                barbeiroNome={equipeMap.get(a.barbeiro_id) ?? ""}
+                slug={slug}
+                podeCancelar={proximos.includes(a)}
+              />
             ))}
           </div>
         </div>
@@ -145,45 +147,3 @@ export default async function MeusAgendamentosPage({
   );
 }
 
-function Agendamento({
-  atendimento,
-  barbeiroNome,
-}: {
-  atendimento: Atendimento;
-  barbeiroNome: string;
-}) {
-  const inicio = new Date(atendimento.inicio);
-  return (
-    <Card>
-      <CardContent className="p-4 flex items-center justify-between gap-3">
-        <div>
-          <p className="font-medium text-sm capitalize">
-            {inicio.toLocaleDateString("pt-BR", {
-              weekday: "short",
-              day: "2-digit",
-              month: "short",
-            })}
-            {" · "}
-            {inicio.toLocaleTimeString("pt-BR", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </p>
-          <p className="text-xs text-[var(--color-muted)]">com {barbeiroNome}</p>
-          {atendimento.valor_total && (
-            <p className="text-xs text-[var(--color-primary)] mt-1">
-              {formatBRL(Number.parseFloat(atendimento.valor_total))}
-            </p>
-          )}
-        </div>
-        <span
-          className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-semibold ${
-            STATUS_COR[atendimento.status] ?? ""
-          }`}
-        >
-          {STATUS_LABEL[atendimento.status] ?? atendimento.status}
-        </span>
-      </CardContent>
-    </Card>
-  );
-}

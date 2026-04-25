@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { hashPassword } from "@/lib/auth/password";
 import { createSession } from "@/lib/auth/session";
-import { buscarBarbeariaPorSlug } from "@/infrastructure/database/repositories/barbearias.repo";
+import { buscarBarbeariaPorSlug, BarbeariasRepo } from "@/infrastructure/database/repositories/barbearias.repo";
 import {
   ClientesRepo,
   buscarClientePorAuthEmail,
@@ -15,6 +15,7 @@ const schema = z.object({
   telefone: z.string().optional(),
   email: z.string().email(),
   senha: z.string().min(6),
+  ref: z.string().uuid().optional(),
 });
 
 export async function cadastrarClienteAction(
@@ -29,6 +30,7 @@ export async function cadastrarClienteAction(
     telefone: formData.get("telefone") || undefined,
     email: formData.get("email"),
     senha: formData.get("senha"),
+    ref: formData.get("ref") || undefined,
   });
   if (!parsed.success) throw new Error("Dados inválidos");
 
@@ -47,6 +49,25 @@ export async function cadastrarClienteAction(
     authEmail: parsed.data.email,
     authSenhaHash: senhaHash,
   });
+
+  // Premia indicador (se vier ?ref=clienteId válido)
+  if (parsed.data.ref && parsed.data.ref !== cliente.id) {
+    const indicador = await repo.get(parsed.data.ref);
+    if (indicador) {
+      const barbeariaRepo = new BarbeariasRepo(barbearia.id);
+      const barbCompleta = await barbeariaRepo.get();
+      const pontos = barbCompleta?.config.fpts_regras.indicacao ?? 500;
+      await repo.registrarEvento(
+        indicador.id,
+        {
+          tipo: "indicacao",
+          pontos,
+          descricao: `Indicou ${parsed.data.nome}`,
+        },
+        barbCompleta?.config.niveis ?? []
+      );
+    }
+  }
 
   await createSession({
     tipo: "cliente",

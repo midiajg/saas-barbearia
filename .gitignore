@@ -46,3 +46,5 @@ next-env.d.ts
 *.pdf
 1.png
 2.png
+
+.vercel

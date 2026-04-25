@@ -188,6 +188,30 @@ export function ClienteCardDrawer({
             </span>
           </div>
 
+          {/* Barra de progresso pro próximo nível */}
+          {prox ? (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[var(--color-muted)]">
+                  Próximo nível: <span className="font-medium">{prox.nivel.nome}</span>
+                </span>
+                <span className="font-semibold text-[var(--color-primary)]">
+                  faltam {prox.faltam} FPTS
+                </span>
+              </div>
+              <div className="h-2 bg-[var(--color-background)] rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-[var(--color-primary)] to-yellow-400 transition-all"
+                  style={{ width: `${progressoPct}%` }}
+                />
+              </div>
+            </div>
+          ) : nivel ? (
+            <div className="px-3 py-2 rounded-md bg-yellow-400/10 text-xs text-center text-yellow-600 font-semibold">
+              🏆 Nível máximo atingido — {nivel.nome}
+            </div>
+          ) : null}
+
           {/* Ações FPTS */}
           <div className="space-y-2">
             <h3 className="text-xs uppercase tracking-wider text-[var(--color-muted)] font-semibold">

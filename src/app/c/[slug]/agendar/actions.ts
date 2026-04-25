@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireClienteSession } from "@/lib/auth/session";
 import { BarbeariasRepo } from "@/infrastructure/database/repositories/barbearias.repo";
@@ -62,4 +63,29 @@ export async function confirmarAgendamentoCliente(
 
   redirect(`/c/${data.slug}/meus-agendamentos`);
   return { id: criado.id };
+}
+
+export async function cancelarPeloCliente(
+  slug: string,
+  atendimentoId: string
+) {
+  const session = await requireClienteSession(slug);
+  const atRepo = new AtendimentosRepo(session.barbeariaId);
+  const at = await atRepo.get(atendimentoId);
+  if (!at) throw new Error("Atendimento não encontrado");
+  if (at.cliente_id !== session.clienteId)
+    throw new Error("Você não pode cancelar este atendimento");
+  if (at.status !== "agendado" && at.status !== "confirmado")
+    throw new Error("Só dá pra cancelar agendamentos futuros");
+
+  // Antecedência mínima: 2h antes do horário
+  const duasHorasMs = 2 * 60 * 60 * 1000;
+  if (new Date(at.inicio).getTime() - Date.now() < duasHorasMs) {
+    throw new Error(
+      "Cancele com pelo menos 2h de antecedência. Entre em contato com a barbearia."
+    );
+  }
+
+  await atRepo.mudarStatus(atendimentoId, "cancelado");
+  revalidatePath(`/c/${slug}/meus-agendamentos`);
 }

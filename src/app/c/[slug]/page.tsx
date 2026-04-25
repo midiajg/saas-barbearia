@@ -66,7 +66,7 @@ export default async function PortalClienteHome({
                 </Button>
               </CardContent>
             </Card>
-            <form action={`/api/auth/logout`} method="POST">
+            <form action={`/api/auth/logout?tipo=cliente`} method="POST">
               <Button
                 type="submit"
                 variant="ghost"

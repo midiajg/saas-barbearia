@@ -11,10 +11,14 @@ import {
 
 const MAX_AGE = 60 * 60 * 24 * 30;
 
+function cookieName(tipo: "equipe" | "cliente"): string {
+  return tipo === "equipe" ? env.AUTH_COOKIE_NAME : env.AUTH_COOKIE_CLIENTE;
+}
+
 export async function createSession(payload: SessionPayload): Promise<void> {
   const token = await signSession(payload);
   const store = await cookies();
-  store.set(env.AUTH_COOKIE_NAME, token, {
+  store.set(cookieName(payload.tipo), token, {
     httpOnly: true,
     secure: env.NODE_ENV === "production",
     sameSite: "lax",
@@ -23,24 +27,54 @@ export async function createSession(payload: SessionPayload): Promise<void> {
   });
 }
 
-export async function destroySession(): Promise<void> {
+export async function destroySessionEquipe(): Promise<void> {
   const store = await cookies();
   store.delete(env.AUTH_COOKIE_NAME);
 }
 
-export async function getSession(): Promise<SessionPayload | null> {
+export async function destroySessionCliente(): Promise<void> {
+  const store = await cookies();
+  store.delete(env.AUTH_COOKIE_CLIENTE);
+}
+
+export async function destroySession(): Promise<void> {
+  // Remove os 2 (logout total)
+  await destroySessionEquipe();
+  await destroySessionCliente();
+}
+
+export async function getSessionEquipe(): Promise<SessionEquipe | null> {
   const store = await cookies();
   const token = store.get(env.AUTH_COOKIE_NAME)?.value;
   if (!token) return null;
-  return verifySession(token);
+  const s = await verifySession(token);
+  return s?.tipo === "equipe" ? s : null;
+}
+
+export async function getSessionCliente(): Promise<SessionCliente | null> {
+  const store = await cookies();
+  const token = store.get(env.AUTH_COOKIE_CLIENTE)?.value;
+  if (!token) return null;
+  const s = await verifySession(token);
+  return s?.tipo === "cliente" ? s : null;
+}
+
+/**
+ * Pega a sessão de qualquer tipo. Útil pra decidir o que fazer em rotas
+ * que ambos podem acessar (ex: home).
+ */
+export async function getSession(): Promise<SessionPayload | null> {
+  const equipe = await getSessionEquipe();
+  if (equipe) return equipe;
+  return getSessionCliente();
 }
 
 // ---- Staff / equipe ----
 
 export async function requireSession(): Promise<SessionEquipe> {
-  const session = await getSession();
-  if (!session || session.tipo !== "equipe") redirect("/login");
-  return session as SessionEquipe;
+  const session = await getSessionEquipe();
+  if (!session) redirect("/login");
+  return session;
 }
 
 export async function requireDonoOuGerente(): Promise<SessionEquipe> {
@@ -62,9 +96,7 @@ export async function requireDono(): Promise<SessionEquipe> {
 export async function requireClienteSession(
   slug: string
 ): Promise<SessionCliente> {
-  const session = await getSession();
-  if (!session || session.tipo !== "cliente") {
-    redirect(`/c/${slug}/login`);
-  }
-  return session as SessionCliente;
+  const session = await getSessionCliente();
+  if (!session) redirect(`/c/${slug}/login`);
+  return session;
 }

@@ -4,7 +4,7 @@ import { LogOut, ChevronDown } from "lucide-react";
 
 export function Topbar({ nome, email }: { nome: string; email: string }) {
   async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await fetch("/api/auth/logout?tipo=equipe", { method: "POST" });
     window.location.href = "/login";
   }
 

@@ -15,10 +15,13 @@ import { cadastrarClienteAction } from "./actions";
 
 export default async function CadastroPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ ref?: string }>;
 }) {
   const { slug } = await params;
+  const { ref } = await searchParams;
   const barbearia = await buscarBarbeariaPorSlug(slug);
   if (!barbearia) notFound();
 
@@ -32,8 +35,14 @@ export default async function CadastroPage({
           <p className="text-sm text-[var(--color-muted)]">
             {barbearia.nome}
           </p>
+          {ref && (
+            <p className="text-xs text-[var(--color-primary)] mt-1">
+              🤝 Você foi indicado por um amigo
+            </p>
+          )}
         </CardHeader>
         <form action={action}>
+          {ref && <input type="hidden" name="ref" value={ref} />}
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="nome">Nome</Label>
