@@ -19,6 +19,7 @@ import {
   Award,
   Receipt,
   Ban,
+  CircleDollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Cargo } from "@/infrastructure/database/types";
@@ -66,6 +67,11 @@ const SECTIONS: NavSection[] = [
   {
     label: "Financeiro",
     items: [
+      {
+        href: "/financeiro/caixa",
+        label: "Caixa do dia",
+        icon: CircleDollarSign,
+      },
       { href: "/financeiro/comissoes", label: "Comissões", icon: Wallet },
       {
         href: "/financeiro/despesas",

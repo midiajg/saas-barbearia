@@ -191,6 +191,9 @@ export function AgendaClient({
           <Button onClick={abrirNovoLivre}>
             <Plus className="size-4" /> Agendar
           </Button>
+          <Button variant="outline" asChild>
+            <a href={`/agenda/semana?data=${data}`}>Semana</a>
+          </Button>
         </div>
       </header>
 

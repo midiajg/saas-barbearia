@@ -105,7 +105,43 @@ export type BarbeariaConfig = {
   bloqueios?: BloqueioRef[];
   despesas?: DespesaRef[];
   fila_espera?: FilaItemRef[];
+  caixa_atual?: CaixaAbertoRef | null;
+  caixas_historico?: CaixaFechadoRef[];
 };
+
+type MovimentoCaixaRef = {
+  id: string;
+  tipo: "sangria" | "suprimento" | "ajuste";
+  valor: number; // sempre positivo; tipo define direção
+  motivo?: string;
+  hora: string; // ISO
+};
+
+type CaixaAbertoRef = {
+  id: string;
+  aberto_em: string; // ISO
+  aberto_por: string; // equipeId
+  saldo_inicial: number;
+  movimentos: MovimentoCaixaRef[];
+};
+
+type CaixaFechadoRef = {
+  id: string;
+  data: string; // YYYY-MM-DD
+  aberto_em: string;
+  fechado_em: string;
+  aberto_por: string;
+  fechado_por: string;
+  saldo_inicial: number;
+  movimentos: MovimentoCaixaRef[];
+  recebido_sistema: number; // soma de pagamentos em dinheiro do dia
+  contado_fisico: number;
+  diferenca: number; // contado - esperado
+};
+
+export type MovimentoCaixa = MovimentoCaixaRef;
+export type CaixaAberto = CaixaAbertoRef;
+export type CaixaFechado = CaixaFechadoRef;
 
 // Refs (mesma shape declarada depois — split pra não dar referência circular)
 type BloqueioRef = {

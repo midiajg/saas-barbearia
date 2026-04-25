@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Poppins } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { PwaRegister } from "@/components/pwa-register";
 import "./globals.css";
 
@@ -48,6 +49,7 @@ export default function RootLayout({
       <body>
         {children}
         <PwaRegister />
+        <Analytics />
       </body>
     </html>
   );

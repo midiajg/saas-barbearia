@@ -72,9 +72,33 @@ export async function mudarStatusAction(
   status: StatusAtendimento
 ) {
   const session = await requireSession();
-  const repo = new AtendimentosRepo(session.barbeariaId);
-  await repo.mudarStatus(id, status);
+  const atRepo = new AtendimentosRepo(session.barbeariaId);
+  const at = await atRepo.get(id);
+  if (!at) throw new Error("Atendimento não encontrado");
+
+  await atRepo.mudarStatus(id, status);
+
+  // No-show: debita pontualidade do cliente como penalidade
+  if (status === "no_show" && at.cliente_id) {
+    const barbeariaRepo = new BarbeariasRepo(session.barbeariaId);
+    const barbearia = await barbeariaRepo.get();
+    if (barbearia) {
+      const clientesRepo = new ClientesRepo(session.barbeariaId);
+      const penalidade = barbearia.config.fpts_regras.pontualidade ?? 100;
+      await clientesRepo.registrarEvento(
+        at.cliente_id,
+        {
+          tipo: "ajuste",
+          pontos: -penalidade,
+          descricao: "Penalidade por não comparecer",
+        },
+        barbearia.config.niveis
+      );
+    }
+  }
+
   revalidatePath("/agenda");
+  revalidatePath("/clientes");
 }
 
 export async function cancelarAtendimentoAction(id: string) {

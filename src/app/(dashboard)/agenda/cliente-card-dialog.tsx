@@ -18,8 +18,11 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { useTransition } from "react";
 import { cn, diasDesde, formatBRL } from "@/lib/utils";
 import { nivelAtual } from "@/domain/fpts";
+import { mudarStatusAction } from "./actions";
 import type {
   Atendimento,
   CatalogoServico,
@@ -72,6 +75,21 @@ export function ClienteCardDialog({
   const [expandido, setExpandido] = useState(true);
   const [showFptsDialog, setShowFptsDialog] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
+  const [pending, startTransition] = useTransition();
+
+  function marcarNoShow() {
+    if (!confirm("Marcar como NÃO COMPARECEU? Cliente perde FPTS."))
+      return;
+    startTransition(async () => {
+      try {
+        await mudarStatusAction(atendimento.id, "no_show");
+        toast.success("Marcado como no-show. FPTS debitado.");
+        onOpenChange(false);
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Erro");
+      }
+    });
+  }
 
   const nivel = useMemo(() => {
     if (!cliente) return null;
@@ -351,13 +369,26 @@ export function ClienteCardDialog({
             </div>
 
             {atendimento.valor_total && (
-              <div className="px-5 pb-4 -mt-2">
+              <div className="px-5 pb-2 -mt-2">
                 <p className="text-center text-xs text-white/70">
                   Valor previsto:{" "}
                   <span className="font-semibold text-white">
                     {formatBRL(Number.parseFloat(atendimento.valor_total))}
                   </span>
                 </p>
+              </div>
+            )}
+
+            {(atendimento.status === "agendado" ||
+              atendimento.status === "confirmado") && (
+              <div className="px-5 pb-4">
+                <button
+                  onClick={marcarNoShow}
+                  disabled={pending}
+                  className="w-full text-xs text-white/60 hover:text-white/90 transition disabled:opacity-50"
+                >
+                  {pending ? "..." : "Marcar como não compareceu"}
+                </button>
               </div>
             )}
           </div>
