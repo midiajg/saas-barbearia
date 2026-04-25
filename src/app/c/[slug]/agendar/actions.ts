@@ -59,6 +59,7 @@ export async function confirmarAgendamentoCliente(
     fim,
     servicos: itens,
     valorTotal,
+    bloqueios: barbearia.config.bloqueios ?? [],
   });
 
   redirect(`/c/${data.slug}/meus-agendamentos`);

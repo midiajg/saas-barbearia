@@ -59,6 +59,7 @@ export async function criarAtendimentoAction(
     fim,
     servicos: itens,
     valorTotal,
+    bloqueios: barbearia.config.bloqueios ?? [],
   });
 
   revalidatePath("/agenda");

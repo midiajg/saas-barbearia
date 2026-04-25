@@ -62,6 +62,7 @@ export default async function AgendaPage({
       clientes={clientes}
       produtos={produtos}
       niveis={barbearia?.config.niveis ?? []}
+      fila={barbearia?.config.fila_espera ?? []}
       horaInicio={horaInicio}
       horaFim={horaFim}
       cashbackRegra={

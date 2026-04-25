@@ -17,6 +17,8 @@ import {
   Gem,
   Coins,
   Award,
+  Receipt,
+  Ban,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Cargo } from "@/infrastructure/database/types";
@@ -66,6 +68,12 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: "/financeiro/comissoes", label: "Comissões", icon: Wallet },
       {
+        href: "/financeiro/despesas",
+        label: "Despesas",
+        icon: Receipt,
+        cargos: ["dono", "gerente"],
+      },
+      {
         href: "/financeiro/relatorios",
         label: "Relatórios",
         icon: BarChart3,
@@ -80,6 +88,12 @@ const SECTIONS: NavSection[] = [
         href: "/config/horarios",
         label: "Horários",
         icon: Clock,
+        cargos: ["dono", "gerente"],
+      },
+      {
+        href: "/config/bloqueios",
+        label: "Bloqueios (folga)",
+        icon: Ban,
         cargos: ["dono", "gerente"],
       },
       {

@@ -10,6 +10,7 @@ import { NovoAgendamentoDialog } from "./novo-agendamento-dialog";
 import { AgendamentoCard } from "./agendamento-card";
 import { FecharContaDialog } from "./fechar-conta-dialog";
 import { ClienteCardDialog } from "./cliente-card-dialog";
+import { FilaEsperaPainel } from "./fila-espera-painel";
 import { nivelAtual } from "@/domain/fpts";
 import type {
   Atendimento,
@@ -18,6 +19,7 @@ import type {
   CatalogoServico,
   Cliente,
   Equipe,
+  FilaItem,
   FptsRegras,
   Nivel,
 } from "@/infrastructure/database/types";
@@ -33,6 +35,7 @@ export function AgendaClient({
   clientes,
   produtos,
   niveis,
+  fila,
   horaInicio,
   horaFim,
   cashbackRegra,
@@ -45,6 +48,7 @@ export function AgendaClient({
   clientes: Cliente[];
   produtos: CatalogoProduto[];
   niveis: Nivel[];
+  fila: FilaItem[];
   horaInicio: number;
   horaFim: number;
   cashbackRegra: CashbackRegra;
@@ -264,9 +268,7 @@ export function AgendaClient({
               ))}
             </div>
 
-            <div className="border-r border-[var(--color-border)] bg-[var(--color-background)]/30 p-2 space-y-1">
-              <p className="text-xs text-[var(--color-muted)] italic">Vazia</p>
-            </div>
+            <FilaEsperaPainel fila={fila} clientes={clientes} />
 
             {equipe.map((b) => {
               const items = porBarbeiro.get(b.id) ?? [];

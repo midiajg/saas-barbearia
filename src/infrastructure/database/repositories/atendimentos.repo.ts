@@ -54,6 +54,7 @@ export class AtendimentosRepo extends BaseRepo {
     servicos?: ServicoAtendido[];
     valorTotal?: number;
     observacoes?: string;
+    bloqueios?: { barbeiro_id: string; inicio: string; fim: string }[];
   }): Promise<Atendimento> {
     const { data: conflito } = await this.sb
       .from(TABELAS.atendimentos)
@@ -66,6 +67,17 @@ export class AtendimentosRepo extends BaseRepo {
       .limit(1);
     if (conflito && conflito.length > 0)
       throw new Error("Horário em conflito com outro atendimento deste barbeiro");
+
+    // Conflito com bloqueio do barbeiro (folga, almoço)
+    const bloqueiosConflito = (input.bloqueios ?? []).filter(
+      (b) =>
+        b.barbeiro_id === input.barbeiroId &&
+        new Date(b.inicio).getTime() < input.fim.getTime() &&
+        new Date(b.fim).getTime() > input.inicio.getTime()
+    );
+    if (bloqueiosConflito.length > 0) {
+      throw new Error("Esse horário está bloqueado (folga ou intervalo)");
+    }
 
     const { data, error } = await this.sb
       .from(TABELAS.atendimentos)

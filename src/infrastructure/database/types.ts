@@ -102,6 +102,33 @@ export type BarbeariaConfig = {
   catalogo_produtos: CatalogoProduto[];
   whatsapp: WhatsappConfig;
   paleta?: Paleta;
+  bloqueios?: BloqueioRef[];
+  despesas?: DespesaRef[];
+  fila_espera?: FilaItemRef[];
+};
+
+// Refs (mesma shape declarada depois — split pra não dar referência circular)
+type BloqueioRef = {
+  id: string;
+  barbeiro_id: string;
+  inicio: string;
+  fim: string;
+  motivo?: string;
+};
+type DespesaRef = {
+  id: string;
+  data: string;
+  descricao: string;
+  categoria: string;
+  valor: number;
+  pago: boolean;
+};
+type FilaItemRef = {
+  id: string;
+  cliente_id: string;
+  barbeiro_id?: string;
+  observacao?: string;
+  criado_em: string;
 };
 
 export type DadosPessoais = {
@@ -160,6 +187,11 @@ export type Equipe = {
   ativo: boolean;
   criado_em: string;
 };
+
+// Re-exports pra conveniência
+export type Bloqueio = BloqueioRef;
+export type Despesa = DespesaRef;
+export type FilaItem = FilaItemRef;
 
 export type Cliente = {
   id: string;
