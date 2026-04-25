@@ -10,19 +10,25 @@ import { ClienteDialog } from "./cliente-dialog";
 import { ClienteCardDrawer } from "./cliente-card-drawer";
 import { nivelAtual } from "@/domain/fpts";
 import type {
+  CatalogoServico,
   Cliente,
   FptsRegras,
   Nivel,
+  Pacote,
 } from "@/infrastructure/database/types";
 
 export function ClientesClient({
   clientes,
   niveis,
+  pacotes,
+  servicos,
   fptsRegras,
   busca,
 }: {
   clientes: Cliente[];
   niveis: Nivel[];
+  pacotes: Pacote[];
+  servicos: CatalogoServico[];
   fptsRegras: FptsRegras;
   busca: string;
 }) {
@@ -131,6 +137,8 @@ export function ClientesClient({
           cliente={drawerCliente}
           nivel={nivelAtual(drawerCliente.fpts, niveis)}
           niveis={niveis}
+          pacotes={pacotes}
+          servicos={servicos}
           fptsRegras={fptsRegras}
           onClose={() => setDrawerCliente(null)}
         />

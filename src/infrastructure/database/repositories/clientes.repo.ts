@@ -5,6 +5,7 @@ import type {
   DadosPessoais,
   EventoFpts,
   Nivel,
+  PacoteAtivo,
   TipoEventoFpts,
 } from "../types";
 import { nivelAtual } from "@/domain/fpts";
@@ -123,6 +124,15 @@ export class ClientesRepo extends BaseRepo {
     const { error } = await this.sb
       .from(TABELAS.clientes)
       .update({ ultima_visita: data.toISOString() })
+      .eq("barbearia_id", this.barbeariaId)
+      .eq("id", id);
+    if (error) throw error;
+  }
+
+  async setPacoteAtivo(id: string, pacote: PacoteAtivo | null): Promise<void> {
+    const { error } = await this.sb
+      .from(TABELAS.clientes)
+      .update({ pacote_ativo: pacote })
       .eq("barbearia_id", this.barbeariaId)
       .eq("id", id);
     if (error) throw error;

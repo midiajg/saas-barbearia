@@ -8,6 +8,7 @@ import {
   Users,
   Scissors,
   ShoppingBag,
+  Package2,
   Wallet,
   BarChart3,
   Clock,
@@ -60,6 +61,12 @@ const SECTIONS: NavSection[] = [
         href: "/produtos",
         label: "Produtos",
         icon: ShoppingBag,
+        cargos: ["dono", "gerente"],
+      },
+      {
+        href: "/produtos/pacotes",
+        label: "Pacotes",
+        icon: Package2,
         cargos: ["dono", "gerente"],
       },
     ],
@@ -165,10 +172,16 @@ export function Sidebar({ cargo }: { cargo: Cargo }) {
             ) : null}
             <ul className="space-y-0.5">
               {section.items.map((item) => {
-                const isActive =
-                  pathname === item.href ||
-                  (item.href !== "/dashboard" &&
-                    pathname.startsWith(item.href));
+                // Match exato para hrefs que têm subrotas ativas (ex: /produtos vs /produtos/pacotes)
+                const hasSubItem = section.items.some(
+                  (other) =>
+                    other !== item && other.href.startsWith(item.href + "/")
+                );
+                const isActive = hasSubItem
+                  ? pathname === item.href
+                  : pathname === item.href ||
+                    (item.href !== "/dashboard" &&
+                      pathname.startsWith(item.href + "/"));
                 const Icon = item.icon;
                 return (
                   <li key={item.href}>

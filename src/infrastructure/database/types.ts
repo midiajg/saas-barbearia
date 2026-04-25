@@ -88,6 +88,18 @@ export type WhatsappConfig = {
   instancia: string | null;
 };
 
+export type Pacote = {
+  id: string;
+  nome: string;
+  descricao?: string;
+  preco: number;
+  quantidade: number | null; // X usos. null = ilimitado durante o período
+  recorrente: boolean; // true = mensalidade renovável
+  duracao_dias: number; // validade em dias (30 = mensal)
+  servicos_inclusos: string[]; // ids do catalogo_servicos. vazio = todos
+  ativo: boolean;
+};
+
 export type Paleta = {
   primary?: string;
 };
@@ -107,6 +119,7 @@ export type BarbeariaConfig = {
   fila_espera?: FilaItemRef[];
   caixa_atual?: CaixaAbertoRef | null;
   caixas_historico?: CaixaFechadoRef[];
+  pacotes?: Pacote[];
 };
 
 type MovimentoCaixaRef = {
@@ -229,6 +242,17 @@ export type Bloqueio = BloqueioRef;
 export type Despesa = DespesaRef;
 export type FilaItem = FilaItemRef;
 
+export type PacoteAtivo = {
+  pacote_id: string;
+  nome: string; // snapshot do nome no momento da venda
+  inicio: string; // ISO
+  fim: string; // ISO
+  usos_iniciais: number | null; // null = ilimitado
+  usos_restantes: number | null;
+  recorrente: boolean;
+  servicos_inclusos: string[]; // snapshot
+};
+
 export type Cliente = {
   id: string;
   barbearia_id: string;
@@ -241,6 +265,7 @@ export type Cliente = {
   cashback_fpts: number;
   ultima_visita: string | null;
   eventos_fpts: EventoFpts[];
+  pacote_ativo: PacoteAtivo | null;
   auth_email: string | null;
   auth_senha_hash: string | null;
   criado_em: string;
@@ -263,5 +288,6 @@ export type Atendimento = {
   valor_pago: string | null;
   forma_pagamento: FormaPagamento | null;
   observacoes: string | null;
+  lembrete_enviado_em: string | null;
   criado_em: string;
 };

@@ -8,6 +8,7 @@ import type {
   Feriado,
   Horario,
   Nivel,
+  Pacote,
   PlanoAssinatura,
   WhatsappConfig,
 } from "../types";
@@ -166,6 +167,9 @@ export class BarbeariasRepo {
   }
   async salvarWhatsapp(wa: WhatsappConfig): Promise<Barbearia> {
     return this.atualizarConfig({ whatsapp: wa });
+  }
+  async salvarPacotes(pacotes: Pacote[]): Promise<Barbearia> {
+    return this.atualizarConfig({ pacotes });
   }
 }
 

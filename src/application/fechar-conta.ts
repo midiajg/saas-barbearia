@@ -10,7 +10,12 @@ import { supabaseAdmin } from "@/infrastructure/database/client";
 import { TABELAS } from "@/infrastructure/database/tabelas";
 import { aplicarResgate } from "@/domain/cashback";
 import { nivelAtual } from "@/domain/fpts";
-import type { ProdutoVendido } from "@/infrastructure/database/types";
+import { aplicarPacoteEmServicos, pacoteEstaAtivo } from "@/domain/pacotes";
+import type {
+  PacoteAtivo,
+  ProdutoVendido,
+  ServicoAtendido,
+} from "@/infrastructure/database/types";
 
 const produtoItemSchema = z.object({
   produtoId: z.string().uuid(),
@@ -47,19 +52,29 @@ export async function fecharConta(input: z.infer<typeof schema>) {
   const barbearia = await barbeariasRepo.get();
   if (!barbearia) throw new Error("Barbearia não encontrada");
 
-  const valorServicos = Number.parseFloat(atendimento.valor_total ?? "0");
-
-  // Nível + cashback do cliente
+  // Nível + cashback + pacote do cliente
   let clienteNivelNumero: number | null = null;
   let cashbackFptsCliente = 0;
+  let pacoteAtivo: PacoteAtivo | null = null;
   if (atendimento.cliente_id) {
     const cliente = await clientesRepo.get(atendimento.cliente_id);
     cashbackFptsCliente = cliente?.cashback_fpts ?? 0;
     if (cliente) {
       const nv = nivelAtual(cliente.fpts, barbearia.config.niveis);
       clienteNivelNumero = nv?.numero ?? null;
+      pacoteAtivo = pacoteEstaAtivo(cliente.pacote_ativo)
+        ? cliente.pacote_ativo
+        : null;
     }
   }
+
+  // Aplica pacote nos serviços do atendimento (zera preço dos cobertos)
+  const servicosOriginais: ServicoAtendido[] = atendimento.servicos ?? [];
+  const aplicacaoPacote = aplicarPacoteEmServicos(pacoteAtivo, servicosOriginais);
+  const valorServicos = aplicacaoPacote.servicos.reduce(
+    (acc, s) => acc + s.preco,
+    0
+  );
 
   // Resolve produtos vendidos aplicando desconto por nível
   const produtosVendidos: ProdutoVendido[] = [];
@@ -110,11 +125,12 @@ export async function fecharConta(input: z.infer<typeof schema>) {
     barbearia.config.cashback
   );
 
-  // Atualiza o atendimento → realizado
+  // Atualiza o atendimento → realizado (com serviços já com preços ajustados pelo pacote)
   await supabaseAdmin
     .from(TABELAS.atendimentos)
     .update({
       status: "realizado",
+      servicos: aplicacaoPacote.servicos,
       produtos: produtosVendidos.length > 0 ? produtosVendidos : null,
       valor_total: valorBase.toFixed(2),
       desconto: descontoExtra.toFixed(2),
@@ -134,6 +150,31 @@ export async function fecharConta(input: z.infer<typeof schema>) {
       return { ...p, estoque: Math.max(0, p.estoque - vendido.qtd) };
     });
     await barbeariasRepo.salvarCatalogoProdutos(novoCatalogo);
+  }
+
+  // Debita usos do pacote ativo
+  if (
+    atendimento.cliente_id &&
+    pacoteAtivo &&
+    aplicacaoPacote.servicosUsadosCount > 0
+  ) {
+    const novoPacote: PacoteAtivo = {
+      ...pacoteAtivo,
+      usos_restantes:
+        pacoteAtivo.usos_restantes === null
+          ? null
+          : Math.max(
+              0,
+              pacoteAtivo.usos_restantes - aplicacaoPacote.servicosUsadosCount
+            ),
+    };
+    // Se acabou e não é recorrente, desativa
+    const acabou =
+      novoPacote.usos_restantes !== null && novoPacote.usos_restantes <= 0;
+    await clientesRepo.setPacoteAtivo(
+      atendimento.cliente_id,
+      acabou && !novoPacote.recorrente ? null : novoPacote
+    );
   }
 
   // Cliente: FPTS pontualidade + débito do cashback usado + ultima_visita
@@ -179,6 +220,7 @@ export async function fecharConta(input: z.infer<typeof schema>) {
     valorProdutos,
     descontoExtra,
     cashbackAbatido: resgate.reaisAbatidos,
+    descontoPacote: aplicacaoPacote.descontoPacote,
     valorFinal: resgate.valorFinal,
   };
 }

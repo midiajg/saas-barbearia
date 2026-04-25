@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Plus, Calendar } from "lucide-react";
+import { ArrowLeft, Plus, Calendar, Package2, Infinity as InfIcon } from "lucide-react";
+import { pacoteEstaAtivo } from "@/domain/pacotes";
 import { requireClienteSession } from "@/lib/auth/session";
 import { buscarBarbeariaPorSlug } from "@/infrastructure/database/repositories/barbearias.repo";
 import { AtendimentosRepo } from "@/infrastructure/database/repositories/atendimentos.repo";
@@ -85,6 +86,37 @@ export default async function MeusAgendamentosPage({
                 </Link>
               </Button>
             </div>
+
+            {pacoteEstaAtivo(cliente.pacote_ativo) && cliente.pacote_ativo && (
+              <div className="p-3 rounded-md border border-[var(--color-primary)]/40 bg-[var(--color-primary)]/5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs uppercase tracking-wider text-[var(--color-primary)] font-semibold flex items-center gap-1.5 mb-1">
+                      <Package2 className="size-3.5" /> Pacote ativo
+                    </p>
+                    <p className="font-medium text-sm truncate">
+                      {cliente.pacote_ativo.nome}
+                    </p>
+                    <p className="text-xs text-[var(--color-muted)] mt-0.5">
+                      Vence em{" "}
+                      {new Date(
+                        cliente.pacote_ativo.fim
+                      ).toLocaleDateString("pt-BR")}
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold text-[var(--color-primary)] flex items-center gap-1 shrink-0 mt-1">
+                    {cliente.pacote_ativo.usos_restantes === null ? (
+                      <>
+                        <InfIcon className="size-3.5" /> ilimitado
+                      </>
+                    ) : (
+                      `${cliente.pacote_ativo.usos_restantes} uso${cliente.pacote_ativo.usos_restantes === 1 ? "" : "s"}`
+                    )}
+                  </span>
+                </div>
+              </div>
+            )}
+
             <LinkIndicacao
               slug={slug}
               clienteId={cliente.id}

@@ -13,6 +13,8 @@ import {
   Pencil,
   Plus,
   Minus,
+  Package2,
+  Infinity as InfIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -20,12 +22,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ClienteDialog } from "./cliente-dialog";
 import { registrarEventoFpts } from "./actions";
-import { diasDesde } from "@/lib/utils";
+import {
+  venderPacoteAoCliente,
+  cancelarPacoteDoCliente,
+} from "../produtos/pacotes/actions";
+import { diasDesde, formatBRL } from "@/lib/utils";
 import { proximoNivel } from "@/domain/fpts";
+import { pacoteEstaAtivo } from "@/domain/pacotes";
 import type {
+  CatalogoServico,
   Cliente,
   FptsRegras,
   Nivel,
+  Pacote,
   TipoEventoFpts,
 } from "@/infrastructure/database/types";
 
@@ -40,12 +49,16 @@ export function ClienteCardDrawer({
   cliente,
   nivel,
   niveis,
+  pacotes,
+  servicos,
   fptsRegras,
   onClose,
 }: {
   cliente: Cliente;
   nivel: Nivel | null;
   niveis: Nivel[];
+  pacotes: Pacote[];
+  servicos: CatalogoServico[];
   fptsRegras: FptsRegras;
   onClose: () => void;
 }) {
@@ -63,6 +76,45 @@ export function ClienteCardDrawer({
   const [ajusteAberto, setAjusteAberto] = useState(false);
   const [ajustePontos, setAjustePontos] = useState("");
   const [ajusteDescricao, setAjusteDescricao] = useState("");
+  const [pacoteAberto, setPacoteAberto] = useState(false);
+  const [pacoteSel, setPacoteSel] = useState<string>("");
+  const pa = cliente.pacote_ativo;
+  const pacoteAtual = pacoteEstaAtivo(pa) ? pa : null;
+  const pacotesAtivos = pacotes.filter((p) => p.ativo);
+
+  function venderPacote() {
+    if (!pacoteSel) {
+      toast.error("Escolha um pacote");
+      return;
+    }
+    startTransition(async () => {
+      try {
+        await venderPacoteAoCliente({
+          clienteId: cliente.id,
+          pacoteId: pacoteSel,
+        });
+        toast.success("Pacote ativado");
+        setPacoteAberto(false);
+        setPacoteSel("");
+        onClose();
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Erro");
+      }
+    });
+  }
+
+  function cancelarPacote() {
+    if (!confirm("Cancelar pacote ativo desse cliente?")) return;
+    startTransition(async () => {
+      try {
+        await cancelarPacoteDoCliente(cliente.id);
+        toast.success("Pacote cancelado");
+        onClose();
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Erro");
+      }
+    });
+  }
   const d = cliente.dados_pessoais ?? {};
 
   const ultimaVisitaTxt = cliente.ultima_visita
@@ -284,6 +336,92 @@ export function ClienteCardDrawer({
                 <Plus className="size-3.5" />
                 <Minus className="size-3.5 -ml-2" />
                 Ajuste manual
+              </button>
+            )}
+          </div>
+
+          {/* Pacote ativo */}
+          <div className="space-y-2">
+            <h3 className="text-xs uppercase tracking-wider text-[var(--color-muted)] font-semibold flex items-center gap-2">
+              <Package2 className="size-3.5" /> Pacote
+            </h3>
+            {pacoteAtual ? (
+              <div className="p-3 rounded-md border border-[var(--color-primary)]/40 bg-[var(--color-primary)]/5 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{pacoteAtual.nome}</p>
+                    <p className="text-xs text-[var(--color-muted)]">
+                      Vence em{" "}
+                      {new Date(pacoteAtual.fim).toLocaleDateString("pt-BR")}
+                      {pacoteAtual.recorrente && " (mensalidade)"}
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold text-[var(--color-primary)] flex items-center gap-1 shrink-0">
+                    {pacoteAtual.usos_restantes === null ? (
+                      <>
+                        <InfIcon className="size-3.5" /> ilimitado
+                      </>
+                    ) : (
+                      `${pacoteAtual.usos_restantes} usos`
+                    )}
+                  </span>
+                </div>
+                <button
+                  onClick={cancelarPacote}
+                  disabled={pending}
+                  className="text-xs text-[var(--color-destructive)] hover:underline disabled:opacity-50"
+                >
+                  Cancelar pacote
+                </button>
+              </div>
+            ) : pacoteAberto ? (
+              <div className="p-3 rounded-md border border-[var(--color-border)] space-y-2">
+                <Label className="text-xs">Escolha o pacote</Label>
+                <select
+                  value={pacoteSel}
+                  onChange={(e) => setPacoteSel(e.target.value)}
+                  className="w-full h-9 rounded-md border border-[var(--color-border)] bg-transparent px-3 text-sm"
+                >
+                  <option value="">Selecione...</option>
+                  {pacotesAtivos.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.nome} — {formatBRL(p.preco)}
+                      {p.recorrente ? "/mês" : ""}
+                    </option>
+                  ))}
+                </select>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setPacoteAberto(false);
+                      setPacoteSel("");
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button size="sm" onClick={venderPacote} disabled={pending}>
+                    Ativar
+                  </Button>
+                </div>
+              </div>
+            ) : pacotesAtivos.length === 0 ? (
+              <p className="text-xs text-[var(--color-muted)] italic px-2">
+                Nenhum pacote cadastrado.{" "}
+                <a
+                  href="/produtos/pacotes"
+                  className="text-[var(--color-primary)] hover:underline"
+                >
+                  Criar
+                </a>
+              </p>
+            ) : (
+              <button
+                onClick={() => setPacoteAberto(true)}
+                className="w-full flex items-center justify-center gap-2 p-2 rounded-md border border-dashed border-[var(--color-border)] text-sm text-[var(--color-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+              >
+                <Plus className="size-3.5" /> Vender pacote
               </button>
             )}
           </div>

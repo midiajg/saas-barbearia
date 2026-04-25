@@ -60,10 +60,14 @@ create table if not exists "[SAAS][BARBEARIA][VICTOR][clientes]" (
   cashback_fpts    integer not null default 0,
   ultima_visita    timestamptz,
   eventos_fpts     jsonb not null default '[]'::jsonb,
+  pacote_ativo     jsonb,
   auth_email       text,
   auth_senha_hash  text,
   criado_em        timestamptz not null default now()
 );
+-- Migração para tabelas existentes (idempotente)
+alter table "[SAAS][BARBEARIA][VICTOR][clientes]"
+  add column if not exists pacote_ativo jsonb;
 create unique index if not exists clientes_auth_email_unique
   on "[SAAS][BARBEARIA][VICTOR][clientes]" (auth_email)
   where auth_email is not null;
@@ -90,8 +94,12 @@ create table if not exists "[SAAS][BARBEARIA][VICTOR][atendimentos]" (
   valor_pago            numeric(10,2),
   forma_pagamento       text,
   observacoes           text,
+  lembrete_enviado_em   timestamptz,
   criado_em             timestamptz not null default now()
 );
+-- Migração para tabelas existentes (idempotente)
+alter table "[SAAS][BARBEARIA][VICTOR][atendimentos]"
+  add column if not exists lembrete_enviado_em timestamptz;
 create index if not exists atendimentos_barbearia_inicio_idx
   on "[SAAS][BARBEARIA][VICTOR][atendimentos]" (barbearia_id, inicio);
 create index if not exists atendimentos_barbeiro_inicio_idx

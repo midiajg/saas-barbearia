@@ -22,6 +22,8 @@ export default async function ClientesPage({
     <ClientesClient
       clientes={lista}
       niveis={barbearia?.config.niveis ?? []}
+      pacotes={barbearia?.config.pacotes ?? []}
+      servicos={barbearia?.config.catalogo_servicos ?? []}
       fptsRegras={
         barbearia?.config.fpts_regras ?? {
           google: 500,

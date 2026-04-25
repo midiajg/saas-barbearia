@@ -4,14 +4,18 @@ import { requireSession } from "@/lib/auth/session";
 import { AtendimentosRepo } from "@/infrastructure/database/repositories/atendimentos.repo";
 import { EquipeRepo } from "@/infrastructure/database/repositories/equipe.repo";
 import { ClientesRepo } from "@/infrastructure/database/repositories/clientes.repo";
+import { BarbeariasRepo } from "@/infrastructure/database/repositories/barbearias.repo";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatBRL, diasDesde } from "@/lib/utils";
+import { OnboardingChecklist } from "./onboarding-checklist";
 
 export default async function DashboardPage() {
   const session = await requireSession();
   const atRepo = new AtendimentosRepo(session.barbeariaId);
   const equipeRepo = new EquipeRepo(session.barbeariaId);
   const clientesRepo = new ClientesRepo(session.barbeariaId);
+  const barbeariasRepo = new BarbeariasRepo(session.barbeariaId);
+  const barbearia = await barbeariasRepo.get();
 
   const hoje = new Date();
   const inicioHoje = new Date(hoje);
@@ -72,16 +76,28 @@ export default async function DashboardPage() {
   const equipeMap = new Map(equipe.map((e) => [e.id, e.nome]));
   const clientesMap = new Map(clientes.map((c) => [c.id, c.nome]));
 
+  const onboardingStatus = {
+    temServicos:
+      (barbearia?.config.catalogo_servicos?.filter((s) => s.ativo).length ?? 0) >
+      0,
+    temBarbeiros: equipe.length > 1,
+    temHorarios:
+      (barbearia?.config.horarios?.filter((h) => h.ativo).length ?? 0) > 0,
+    temClientes: clientes.length > 0,
+  };
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-display">
+        <h1 className="text-2xl sm:text-3xl font-display">
           Olá, {session.nome.split(" ")[0]}
         </h1>
-        <p className="text-[var(--color-muted)]">
+        <p className="text-sm text-[var(--color-muted)]">
           Visão geral da sua barbearia hoje
         </p>
       </div>
+
+      <OnboardingChecklist status={onboardingStatus} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard

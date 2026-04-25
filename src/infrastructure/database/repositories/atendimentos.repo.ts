@@ -114,4 +114,13 @@ export class AtendimentosRepo extends BaseRepo {
       .eq("id", id);
     if (error) throw error;
   }
+
+  async marcarLembreteEnviado(id: string): Promise<void> {
+    const { error } = await this.sb
+      .from(TABELAS.atendimentos)
+      .update({ lembrete_enviado_em: new Date().toISOString() })
+      .eq("barbearia_id", this.barbeariaId)
+      .eq("id", id);
+    if (error) throw error;
+  }
 }

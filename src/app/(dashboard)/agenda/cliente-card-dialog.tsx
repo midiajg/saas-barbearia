@@ -91,6 +91,30 @@ export function ClienteCardDialog({
     });
   }
 
+  function confirmarPresenca() {
+    startTransition(async () => {
+      try {
+        await mudarStatusAction(atendimento.id, "confirmado");
+        toast.success("Presença confirmada.");
+        onOpenChange(false);
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Erro");
+      }
+    });
+  }
+
+  function iniciarAtendimento() {
+    startTransition(async () => {
+      try {
+        await mudarStatusAction(atendimento.id, "em_atendimento");
+        toast.success("Em atendimento.");
+        onOpenChange(false);
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Erro");
+      }
+    });
+  }
+
   const nivel = useMemo(() => {
     if (!cliente) return null;
     return nivelAtual(cliente.fpts, niveis);
@@ -379,9 +403,31 @@ export function ClienteCardDialog({
               </div>
             )}
 
+            {/* Ações de status — só pra agendamentos abertos */}
             {(atendimento.status === "agendado" ||
               atendimento.status === "confirmado") && (
-              <div className="px-5 pb-4">
+              <div className="px-5 pb-4 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  {atendimento.status === "agendado" && (
+                    <button
+                      onClick={confirmarPresenca}
+                      disabled={pending}
+                      className="h-9 rounded-full bg-white/15 hover:bg-white/25 text-white text-xs font-semibold transition disabled:opacity-50"
+                    >
+                      ✓ Confirmar
+                    </button>
+                  )}
+                  <button
+                    onClick={iniciarAtendimento}
+                    disabled={pending}
+                    className={cn(
+                      "h-9 rounded-full bg-[#f5c930] hover:brightness-110 text-[#2a1f00] text-xs font-bold transition disabled:opacity-50",
+                      atendimento.status === "agendado" ? "" : "col-span-2"
+                    )}
+                  >
+                    ▶ Em atendimento
+                  </button>
+                </div>
                 <button
                   onClick={marcarNoShow}
                   disabled={pending}
@@ -389,6 +435,14 @@ export function ClienteCardDialog({
                 >
                   {pending ? "..." : "Marcar como não compareceu"}
                 </button>
+              </div>
+            )}
+
+            {atendimento.status === "em_atendimento" && (
+              <div className="px-5 pb-4">
+                <p className="text-center text-xs font-semibold text-[#f5c930] uppercase tracking-wider">
+                  ▶ Em atendimento agora
+                </p>
               </div>
             )}
           </div>

@@ -10,6 +10,8 @@ const envSchema = z.object({
   UAZAPI_BASE_URL: z.string().url().optional(),
   UAZAPI_TOKEN: z.string().optional(),
   CRON_SECRET: z.string().optional(),
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().default("Barbearia <onboarding@resend.dev>"),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
@@ -24,6 +26,8 @@ export const env = envSchema.parse({
   UAZAPI_BASE_URL: process.env.UAZAPI_BASE_URL,
   UAZAPI_TOKEN: process.env.UAZAPI_TOKEN,
   CRON_SECRET: process.env.CRON_SECRET,
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
+  EMAIL_FROM: process.env.EMAIL_FROM,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   NODE_ENV: process.env.NODE_ENV,
 });
