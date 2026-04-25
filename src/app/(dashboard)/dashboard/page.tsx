@@ -99,7 +99,7 @@ export default async function DashboardPage() {
 
       <OnboardingChecklist status={onboardingStatus} />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard
           icon={Calendar}
           label="Agendamentos hoje"
@@ -230,12 +230,14 @@ function KpiCard({
 }) {
   return (
     <Card>
-      <CardContent className="p-5">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-sm text-[var(--color-muted)]">{label}</p>
-          <Icon className="size-4 text-[var(--color-primary)]" />
+      <CardContent className="p-3 sm:p-5">
+        <div className="flex items-center justify-between mb-1 sm:mb-2 gap-2">
+          <p className="text-xs sm:text-sm text-[var(--color-muted)] truncate">
+            {label}
+          </p>
+          <Icon className="size-4 text-[var(--color-primary)] shrink-0" />
         </div>
-        <p className="text-2xl font-semibold">{value}</p>
+        <p className="text-lg sm:text-2xl font-semibold truncate">{value}</p>
       </CardContent>
     </Card>
   );

@@ -72,7 +72,7 @@ export function DespesasClient({ despesas }: { despesas: Despesa[] }) {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-display">Despesas</h1>
+          <h1 className="text-2xl sm:text-3xl font-display">Despesas</h1>
           <p className="text-[var(--color-muted)]">
             Tudo que sai do caixa pra calcular lucro real
           </p>

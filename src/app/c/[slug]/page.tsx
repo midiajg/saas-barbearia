@@ -23,26 +23,28 @@ export default async function PortalClienteHome({
 
   return (
     <main className="min-h-screen bg-[var(--color-background)]">
-      <header className="bg-[var(--color-primary)] text-white py-8 px-6 text-center">
+      <header className="bg-[var(--color-primary)] text-white py-8 sm:py-10 px-4 sm:px-6 text-center">
         {barbearia.logo_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={barbearia.logo_url}
             alt={barbearia.nome}
-            className="size-20 rounded-full mx-auto object-cover border-4 border-white/30"
+            className="size-20 sm:size-24 rounded-full mx-auto object-cover border-4 border-white/30"
           />
         ) : (
-          <div className="size-20 rounded-full bg-white/20 mx-auto flex items-center justify-center">
+          <div className="size-20 sm:size-24 rounded-full bg-white/20 mx-auto flex items-center justify-center">
             <Scissors className="size-10 text-white" />
           </div>
         )}
-        <h1 className="font-display text-3xl mt-3">{barbearia.nome}</h1>
+        <h1 className="font-display text-2xl sm:text-3xl mt-3">
+          {barbearia.nome}
+        </h1>
         {barbearia.telefone && (
           <p className="text-white/80 text-sm mt-1">{barbearia.telefone}</p>
         )}
       </header>
 
-      <div className="max-w-md mx-auto px-6 py-8 space-y-4">
+      <div className="max-w-md mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-4">
         {logado ? (
           <>
             <Card>

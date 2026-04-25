@@ -28,7 +28,7 @@ export default async function CadastroPage({
   const action = cadastrarClienteAction.bind(null, slug);
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6 py-10 bg-[var(--color-background)]">
+    <main className="min-h-screen flex items-center justify-center px-4 py-8 sm:px-6 sm:py-10 bg-[var(--color-background)]">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Criar conta</CardTitle>

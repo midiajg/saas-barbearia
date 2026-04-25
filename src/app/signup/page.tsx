@@ -14,7 +14,7 @@ import {
 
 export default function SignupPage() {
   return (
-    <main className="min-h-screen flex items-center justify-center px-6 py-12">
+    <main className="min-h-screen flex items-center justify-center px-4 py-8 sm:px-6 sm:py-12">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Criar barbearia</CardTitle>

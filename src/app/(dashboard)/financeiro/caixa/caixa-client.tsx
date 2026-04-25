@@ -130,7 +130,7 @@ export function CaixaClient({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-display">Caixa</h1>
+        <h1 className="text-2xl sm:text-3xl font-display">Caixa</h1>
         <p className="text-[var(--color-muted)]">
           Abertura, movimentos do dia e fechamento com conferência
         </p>

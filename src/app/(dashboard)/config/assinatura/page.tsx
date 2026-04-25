@@ -56,7 +56,7 @@ export default async function AssinaturaPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-display">Assinatura</h1>
+        <h1 className="text-2xl sm:text-3xl font-display">Assinatura</h1>
         <p className="text-[var(--color-muted)]">
           Seu plano atual e opções de upgrade
         </p>
@@ -71,7 +71,7 @@ export default async function AssinaturaPage() {
               </p>
               <div className="flex items-center gap-2 mt-1">
                 <Gem className="size-6 text-[var(--color-primary)]" />
-                <span className="text-3xl font-display">{info.nome}</span>
+                <span className="text-2xl sm:text-3xl font-display">{info.nome}</span>
               </div>
               <p className="text-xl text-[var(--color-primary)] mt-1">
                 {info.preco}

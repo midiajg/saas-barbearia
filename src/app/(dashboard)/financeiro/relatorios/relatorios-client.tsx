@@ -116,7 +116,7 @@ export function RelatoriosClient({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-display">Relatórios</h1>
+        <h1 className="text-2xl sm:text-3xl font-display">Relatórios</h1>
         <p className="text-[var(--color-muted)]">
           Visão do período: faturamento, clientes e formas de pagamento
         </p>
@@ -358,7 +358,7 @@ function KpiCard({ label, valor }: { label: string; valor: string }) {
         <p className="text-xs uppercase tracking-wider text-[var(--color-muted)]">
           {label}
         </p>
-        <p className="text-3xl font-display mt-1">{valor}</p>
+        <p className="text-2xl sm:text-3xl font-display mt-1">{valor}</p>
       </CardContent>
     </Card>
   );

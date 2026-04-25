@@ -29,10 +29,10 @@ export function ProdutosClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-display">Produtos</h1>
-          <p className="text-[var(--color-muted)]">
+          <h1 className="text-2xl sm:text-3xl font-display">Produtos</h1>
+          <p className="text-sm text-[var(--color-muted)]">
             Catálogo com desconto por nível de fidelidade
           </p>
         </div>
@@ -41,6 +41,7 @@ export function ProdutosClient({
             setEditing(null);
             setOpen(true);
           }}
+          className="self-start sm:self-auto"
         >
           <Plus className="size-4" /> Novo produto
         </Button>

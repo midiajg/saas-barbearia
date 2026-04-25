@@ -1,7 +1,6 @@
 import { requireSession } from "@/lib/auth/session";
 import { BarbeariasRepo } from "@/infrastructure/database/repositories/barbearias.repo";
-import { Sidebar } from "@/components/layout/sidebar";
-import { Topbar } from "@/components/layout/topbar";
+import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { LayoutProviders } from "./layout-providers";
 
 export default async function DashboardLayout({
@@ -16,15 +15,14 @@ export default async function DashboardLayout({
 
   return (
     <LayoutProviders>
-      <div
-        className="min-h-screen flex"
-        style={{ ["--color-primary" as string]: corPrimaria }}
-      >
-        <Sidebar cargo={session.cargo} />
-        <div className="flex-1 flex flex-col min-w-0">
-          <Topbar nome={session.nome} email={session.email} />
-          <main className="flex-1 overflow-auto p-6">{children}</main>
-        </div>
+      <div style={{ ["--color-primary" as string]: corPrimaria }}>
+        <DashboardShell
+          cargo={session.cargo}
+          nome={session.nome}
+          email={session.email}
+        >
+          {children}
+        </DashboardShell>
       </div>
     </LayoutProviders>
   );

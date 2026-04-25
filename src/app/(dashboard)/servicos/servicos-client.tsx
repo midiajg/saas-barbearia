@@ -23,10 +23,10 @@ export function ServicosClient({ servicos }: { servicos: CatalogoServico[] }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-display">Serviços</h1>
-          <p className="text-[var(--color-muted)]">
+          <h1 className="text-2xl sm:text-3xl font-display">Serviços</h1>
+          <p className="text-sm text-[var(--color-muted)]">
             Catálogo com 3 preços: quem volta mais, paga menos
           </p>
         </div>
@@ -35,6 +35,7 @@ export function ServicosClient({ servicos }: { servicos: CatalogoServico[] }) {
             setEditing(null);
             setOpen(true);
           }}
+          className="self-start sm:self-auto"
         >
           <Plus className="size-4" /> Novo serviço
         </Button>

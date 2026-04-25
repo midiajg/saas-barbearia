@@ -25,7 +25,7 @@ export default async function FptsRegrasPage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-3xl font-display">FPTS & Cashback</h1>
+        <h1 className="text-2xl sm:text-3xl font-display">FPTS & Cashback</h1>
         <p className="text-[var(--color-muted)]">
           Configure quantos FPTS o cliente ganha em cada ação e como vira desconto
         </p>

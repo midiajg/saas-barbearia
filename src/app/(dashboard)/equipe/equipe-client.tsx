@@ -29,10 +29,10 @@ export function EquipeClient({ equipe }: { equipe: Equipe[] }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-display">Equipe</h1>
-          <p className="text-[var(--color-muted)]">
+          <h1 className="text-2xl sm:text-3xl font-display">Equipe</h1>
+          <p className="text-sm text-[var(--color-muted)]">
             Barbeiros, gerentes e donos que atendem ou acessam o sistema
           </p>
         </div>
@@ -41,6 +41,7 @@ export function EquipeClient({ equipe }: { equipe: Equipe[] }) {
             setEditing(null);
             setOpen(true);
           }}
+          className="self-start sm:self-auto"
         >
           <Plus className="size-4" /> Nova pessoa
         </Button>

@@ -49,12 +49,12 @@ export function ClientesClient({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-display">Clientes</h1>
-          <p className="text-[var(--color-muted)]">
+          <h1 className="text-2xl sm:text-3xl font-display">Clientes</h1>
+          <p className="text-sm text-[var(--color-muted)]">
             Cada cliente é uma história. Não esqueça nenhuma.
           </p>
         </div>
-        <Button onClick={() => setOpenNovo(true)}>
+        <Button onClick={() => setOpenNovo(true)} className="self-start sm:self-auto">
           <Plus className="size-4" /> Novo cliente
         </Button>
       </div>

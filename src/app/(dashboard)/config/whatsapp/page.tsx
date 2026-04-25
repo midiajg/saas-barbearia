@@ -5,7 +5,7 @@ export default function WhatsappPage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-3xl font-display">WhatsApp</h1>
+        <h1 className="text-2xl sm:text-3xl font-display">WhatsApp</h1>
         <p className="text-[var(--color-muted)]">
           Lembretes automáticos, aniversário, reativação de inativos
         </p>

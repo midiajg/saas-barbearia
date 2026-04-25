@@ -84,7 +84,7 @@ export function ComissoesClient({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-display">Comissões</h1>
+        <h1 className="text-2xl sm:text-3xl font-display">Comissões</h1>
         <p className="text-[var(--color-muted)]">
           Quanto cada barbeiro ganhou no período
         </p>
@@ -151,7 +151,7 @@ export function ComissoesClient({
             <p className="text-xs uppercase tracking-wider text-[var(--color-muted)]">
               Atendimentos
             </p>
-            <p className="text-3xl font-display mt-1">{totalAtendimentos}</p>
+            <p className="text-2xl sm:text-3xl font-display mt-1">{totalAtendimentos}</p>
           </CardContent>
         </Card>
         <Card>
@@ -159,7 +159,7 @@ export function ComissoesClient({
             <p className="text-xs uppercase tracking-wider text-[var(--color-muted)]">
               Faturamento bruto
             </p>
-            <p className="text-3xl font-display mt-1">
+            <p className="text-2xl sm:text-3xl font-display mt-1">
               {formatBRL(totalFaturamento)}
             </p>
           </CardContent>
@@ -169,7 +169,7 @@ export function ComissoesClient({
             <p className="text-xs uppercase tracking-wider text-[var(--color-muted)]">
               Total comissões
             </p>
-            <p className="text-3xl font-display mt-1 text-[var(--color-primary)]">
+            <p className="text-2xl sm:text-3xl font-display mt-1 text-[var(--color-primary)]">
               {formatBRL(totalComissoes)}
             </p>
           </CardContent>
@@ -177,24 +177,26 @@ export function ComissoesClient({
       </div>
 
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-x-auto">
           {linhas.length === 0 ? (
             <p className="p-10 text-center text-[var(--color-muted)]">
               Nenhum barbeiro cadastrado.
             </p>
           ) : (
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[560px]">
               <thead>
                 <tr className="border-b border-[var(--color-border)] text-left">
-                  <th className="px-5 py-3 font-medium">Barbeiro</th>
-                  <th className="px-5 py-3 font-medium text-right">%</th>
-                  <th className="px-5 py-3 font-medium text-right">
-                    Atendimentos
+                  <th className="px-3 sm:px-5 py-3 font-medium">Barbeiro</th>
+                  <th className="px-3 sm:px-5 py-3 font-medium text-right">%</th>
+                  <th className="px-3 sm:px-5 py-3 font-medium text-right">
+                    Atend.
                   </th>
-                  <th className="px-5 py-3 font-medium text-right">
+                  <th className="px-3 sm:px-5 py-3 font-medium text-right">
                     Faturamento
                   </th>
-                  <th className="px-5 py-3 font-medium text-right">Comissão</th>
+                  <th className="px-3 sm:px-5 py-3 font-medium text-right">
+                    Comissão
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -203,17 +205,19 @@ export function ComissoesClient({
                     key={l.barbeiroId}
                     className="border-b border-[var(--color-border)] last:border-0"
                   >
-                    <td className="px-5 py-3 font-medium">{l.barbeiroNome}</td>
-                    <td className="px-5 py-3 text-right">
+                    <td className="px-3 sm:px-5 py-3 font-medium">
+                      {l.barbeiroNome}
+                    </td>
+                    <td className="px-3 sm:px-5 py-3 text-right">
                       {l.percentualComissao.toFixed(0)}%
                     </td>
-                    <td className="px-5 py-3 text-right">
+                    <td className="px-3 sm:px-5 py-3 text-right">
                       {l.qtdAtendimentos}
                     </td>
-                    <td className="px-5 py-3 text-right">
+                    <td className="px-3 sm:px-5 py-3 text-right">
                       {formatBRL(l.faturamentoBruto)}
                     </td>
-                    <td className="px-5 py-3 text-right font-medium text-[var(--color-primary)]">
+                    <td className="px-3 sm:px-5 py-3 text-right font-medium text-[var(--color-primary)]">
                       {formatBRL(l.valorComissao)}
                     </td>
                   </tr>

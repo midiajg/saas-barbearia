@@ -25,7 +25,7 @@ export default async function LoginClientePage({
   const action = loginClienteAction.bind(null, slug);
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6 bg-[var(--color-background)]">
+    <main className="min-h-screen flex items-center justify-center px-4 py-8 sm:px-6 bg-[var(--color-background)]">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Entrar</CardTitle>

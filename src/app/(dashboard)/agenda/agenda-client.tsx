@@ -135,9 +135,9 @@ export function AgendaClient({
     : null;
 
   return (
-    <div className="space-y-4 h-full flex flex-col -m-6 p-6">
-      <header className="flex flex-col lg:flex-row lg:items-center gap-3 justify-between">
-        <div className="flex items-center gap-3">
+    <div className="space-y-3 h-full flex flex-col -m-4 sm:-m-5 md:-m-6 p-4 sm:p-5 md:p-6">
+      <header className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Button
             size="icon"
             variant="outline"
@@ -146,8 +146,8 @@ export function AgendaClient({
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <div className="text-center min-w-32">
-            <p className="font-display text-lg leading-tight">
+          <div className="text-center min-w-28 sm:min-w-32">
+            <p className="font-display text-base sm:text-lg leading-tight">
               {dataObj.toLocaleDateString("pt-BR", {
                 day: "2-digit",
                 month: "short",
@@ -174,24 +174,25 @@ export function AgendaClient({
                 router.push(`/agenda?data=${e.target.value}`)
               )
             }
-            className="w-40"
+            className="w-36 sm:w-40 hidden sm:block"
           />
         </div>
 
-        <div className="flex items-center gap-2 flex-1 max-w-md">
+        <div className="flex items-center gap-2 lg:max-w-md lg:flex-1">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[var(--color-muted)]" />
             <Input
-              placeholder="Buscar cliente agendado..."
+              placeholder="Buscar cliente..."
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               className="pl-9"
             />
           </div>
-          <Button onClick={abrirNovoLivre}>
-            <Plus className="size-4" /> Agendar
+          <Button onClick={abrirNovoLivre} className="shrink-0">
+            <Plus className="size-4" />
+            <span className="hidden sm:inline">Agendar</span>
           </Button>
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild className="shrink-0">
             <a href={`/agenda/semana?data=${data}`}>Semana</a>
           </Button>
         </div>

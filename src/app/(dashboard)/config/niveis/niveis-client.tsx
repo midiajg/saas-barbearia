@@ -79,7 +79,7 @@ export function NiveisClient({ niveis }: { niveis: Nivel[] }) {
     <div className="space-y-6 max-w-3xl">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-display">Níveis de Fidelidade</h1>
+          <h1 className="text-2xl sm:text-3xl font-display">Níveis de Fidelidade</h1>
           <p className="text-[var(--color-muted)]">
             Cliente sobe de nível conforme acumula FPTS
           </p>

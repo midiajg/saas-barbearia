@@ -152,8 +152,8 @@ export function Sidebar({ cargo }: { cargo: Cargo }) {
   })).filter((s) => s.items.length > 0);
 
   return (
-    <aside className="w-60 border-r border-[var(--color-border)] bg-[var(--color-surface)] flex flex-col">
-      <div className="px-6 py-5 border-b border-[var(--color-border)]">
+    <aside className="h-full w-full border-r border-[var(--color-border)] bg-[var(--color-surface)] flex flex-col">
+      <div className="px-5 py-5 border-b border-[var(--color-border)]">
         <div className="flex items-center gap-2">
           <div className="size-8 rounded-md bg-[var(--color-primary)] flex items-center justify-center">
             <Scissors className="size-4 text-[var(--color-primary-foreground)]" />
