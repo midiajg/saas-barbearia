@@ -152,27 +152,39 @@ export function Sidebar({ cargo }: { cargo: Cargo }) {
   })).filter((s) => s.items.length > 0);
 
   return (
-    <aside className="h-full w-full border-r border-[var(--color-border)] bg-[var(--color-surface)] flex flex-col">
-      <div className="px-5 py-5 border-b border-[var(--color-border)]">
-        <div className="flex items-center gap-2">
-          <div className="size-8 rounded-md bg-[var(--color-primary)] flex items-center justify-center">
-            <Scissors className="size-4 text-[var(--color-primary-foreground)]" />
+    <aside className="h-full w-full border-r border-[var(--color-border)] bg-[var(--color-background)] flex flex-col">
+      {/* Cabeçalho — letterhead miniatura */}
+      <div className="px-5 pt-6 pb-5 border-b border-[var(--color-hairline)]">
+        <div className="flex items-center gap-3">
+          <div className="size-9 flex items-center justify-center bg-[var(--color-primary)] text-[var(--color-primary-foreground)]">
+            <Scissors className="size-4" />
           </div>
-          <span className="font-display text-lg">Barbearia</span>
+          <div className="min-w-0">
+            <p
+              className="font-display text-base leading-tight"
+              style={{ fontVariationSettings: '"SOFT" 50, "opsz" 36' }}
+            >
+              Caderno do
+              <br />
+              <em className="display-italic">Salão</em>
+            </p>
+          </div>
         </div>
+        <p className="mt-3 font-mono text-[10px] tracking-widest uppercase text-[var(--color-muted)]">
+          Sistema · MMXXVI
+        </p>
       </div>
 
-      <nav className="flex-1 overflow-auto scrollbar-thin px-3 py-4 space-y-5">
+      <nav className="flex-1 overflow-auto scrollbar-thin px-3 py-5 space-y-6">
         {visivel.map((section, i) => (
           <div key={i}>
             {section.label ? (
-              <p className="px-3 mb-2 text-[10px] font-semibold tracking-wider uppercase text-[var(--color-muted-foreground)]">
+              <p className="px-3 mb-3 font-mono text-[10px] tracking-[0.2em] uppercase text-[var(--color-muted-foreground)]">
                 {section.label}
               </p>
             ) : null}
-            <ul className="space-y-0.5">
+            <ul className="space-y-px">
               {section.items.map((item) => {
-                // Match exato para hrefs que têm subrotas ativas (ex: /produtos vs /produtos/pacotes)
                 const hasSubItem = section.items.some(
                   (other) =>
                     other !== item && other.href.startsWith(item.href + "/")
@@ -188,14 +200,27 @@ export function Sidebar({ cargo }: { cargo: Cargo }) {
                     <Link
                       href={item.href}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                        "group flex items-center gap-3 px-3 py-2 text-sm transition-all relative",
                         isActive
-                          ? "bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-                          : "text-[var(--color-muted)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-foreground)]"
+                          ? "text-[var(--color-foreground)]"
+                          : "text-[var(--color-muted)] hover:text-[var(--color-foreground)]"
                       )}
                     >
-                      <Icon className="size-4 shrink-0" />
-                      <span>{item.label}</span>
+                      {isActive && (
+                        <span
+                          aria-hidden
+                          className="absolute left-0 top-2 bottom-2 w-px bg-[var(--color-primary)]"
+                        />
+                      )}
+                      <Icon
+                        className={cn(
+                          "size-3.5 shrink-0 transition-colors",
+                          isActive
+                            ? "text-[var(--color-primary)]"
+                            : "text-[var(--color-muted-foreground)] group-hover:text-[var(--color-muted)]"
+                        )}
+                      />
+                      <span className="truncate">{item.label}</span>
                     </Link>
                   </li>
                 );
@@ -204,6 +229,12 @@ export function Sidebar({ cargo }: { cargo: Cargo }) {
           </div>
         ))}
       </nav>
+
+      <div className="px-5 py-4 border-t border-[var(--color-hairline)]">
+        <p className="font-mono text-[10px] tracking-widest uppercase text-[var(--color-muted-foreground)]">
+          Edição 001 · {new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+        </p>
+      </div>
     </aside>
   );
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Plus, Calendar, Package2, Infinity as InfIcon } from "lucide-react";
 import { pacoteEstaAtivo } from "@/domain/pacotes";
+import { Eyebrow, DoubleRule } from "@/components/editorial";
 import { requireClienteSession } from "@/lib/auth/session";
 import { buscarBarbeariaPorSlug } from "@/infrastructure/database/repositories/barbearias.repo";
 import { AtendimentosRepo } from "@/infrastructure/database/repositories/atendimentos.repo";
@@ -53,16 +54,40 @@ export default async function MeusAgendamentosPage({
   const historico = atendimentos.filter((a) => !proximos.includes(a));
 
   return (
-    <main className="min-h-screen px-4 py-6 max-w-md mx-auto space-y-6">
-      <div className="flex items-center gap-2">
-        <Button size="icon" variant="ghost" asChild>
-          <Link href={`/c/${slug}`}>
-            <ArrowLeft className="size-4" />
-          </Link>
-        </Button>
-        <p className="text-xs text-[var(--color-muted)] uppercase tracking-wider">
-          Meus agendamentos
-        </p>
+    <main className="min-h-screen flex flex-col">
+      <header className="px-5 sm:px-10 pt-6 pb-4">
+        <div className="max-w-3xl mx-auto">
+          <DoubleRule className="mb-3" />
+          <div className="flex items-center justify-between text-[10px] sm:text-xs">
+            <Link
+              href={`/c/${slug}`}
+              className="font-mono tracking-widest text-[var(--color-muted)] uppercase hover:text-[var(--color-foreground)] transition-colors flex items-center gap-2"
+            >
+              <ArrowLeft className="size-3" /> {barbearia.slug}
+            </Link>
+            <span className="font-mono tracking-widest text-[var(--color-muted)] uppercase hidden sm:inline">
+              Histórico do cliente
+            </span>
+            <span className="font-mono tracking-widest text-[var(--color-primary)] uppercase">
+              Pessoal
+            </span>
+          </div>
+          <DoubleRule className="mt-3" />
+        </div>
+      </header>
+
+      <div className="px-4 py-6 max-w-md mx-auto space-y-6 w-full flex-1">
+      <div className="text-center mb-2">
+        <Eyebrow className="justify-center mb-2">Meus agendamentos</Eyebrow>
+        <h1 className="display-serif text-3xl">
+          {cliente?.nome ? (
+            <>
+              Olá, <em className="display-italic">{cliente.nome.split(" ")[0]}.</em>
+            </>
+          ) : (
+            "Seu painel"
+          )}
+        </h1>
       </div>
 
       {cliente && (
@@ -127,7 +152,7 @@ export default async function MeusAgendamentosPage({
       )}
 
       <div>
-        <h2 className="text-xs uppercase tracking-wider text-[var(--color-muted)] font-semibold mb-2">
+        <h2 className="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-muted)] mb-3">
           Próximos
         </h2>
         {proximos.length === 0 ? (
@@ -159,7 +184,7 @@ export default async function MeusAgendamentosPage({
 
       {historico.length > 0 && (
         <div>
-          <h2 className="text-xs uppercase tracking-wider text-[var(--color-muted)] font-semibold mb-2">
+          <h2 className="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-muted)] mb-3">
             Histórico
           </h2>
           <div className="space-y-2">
@@ -175,6 +200,7 @@ export default async function MeusAgendamentosPage({
           </div>
         </div>
       )}
+      </div>
     </main>
   );
 }

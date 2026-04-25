@@ -1,19 +1,30 @@
 import type { Metadata, Viewport } from "next";
-import { Playfair_Display, Poppins } from "next/font/google";
+import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { PwaRegister } from "@/components/pwa-register";
 import "./globals.css";
 
-const playfair = Playfair_Display({
+// Fraunces — display editorial com SOFT, OPSZ e GRAD variáveis. Substitui Playfair.
+const fraunces = Fraunces({
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",
+  axes: ["SOFT", "WONK", "opsz"],
 });
 
-const poppins = Poppins({
+// Inter — body limpo, com tabular-nums. Substitui Poppins.
+const inter = Inter({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
   variable: "--font-sans",
+  display: "swap",
+});
+
+// JetBrains Mono — pra dados numéricos, KPIs, microtipografia técnica.
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-mono",
   display: "swap",
 });
 
@@ -45,7 +56,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR" className={`${playfair.variable} ${poppins.variable}`}>
+    <html
+      lang="pt-BR"
+      className={`${fraunces.variable} ${inter.variable} ${mono.variable}`}
+    >
       <body>
         {children}
         <PwaRegister />

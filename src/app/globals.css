@@ -2,14 +2,18 @@
 @plugin "tailwindcss-animate";
 
 @theme inline {
-  --color-background: #101815;
-  --color-foreground: #F5F5F0;
-  --color-surface: #1A2320;
-  --color-surface-hover: #243029;
-  --color-border: #2A3530;
-  --color-muted: #A8A39D;
-  --color-muted-foreground: #787570;
+  /* Paleta editorial: deep evergreen, ivory cream, single sharp accent */
+  --color-background: #0E1411;
+  --color-foreground: #F2EEE3;
+  --color-surface: #161D19;
+  --color-surface-hover: #1E2722;
+  --color-border: #232C27;
+  --color-border-strong: #2F3A33;
+  --color-hairline: rgba(242, 238, 227, 0.12);
+  --color-muted: #9AA29A;
+  --color-muted-foreground: #6E756C;
 
+  /* Primary é dinâmico (white-label) — fallback é o teal original */
   --color-primary: #45D4C0;
   --color-primary-foreground: #0A110E;
   --color-primary-hover: #35B8A5;
@@ -17,19 +21,21 @@
   --color-accent: #45D4C0;
   --color-accent-foreground: #0A110E;
 
-  --color-destructive: #E05252;
+  --color-destructive: #C9533D;
   --color-destructive-foreground: #FFFFFF;
 
   --color-success: #22C55E;
-  --color-warning: #F59E0B;
+  --color-warning: #D9A441;
 
-  --font-display: "Playfair Display", Georgia, serif;
-  --font-sans: "Poppins", "Inter", system-ui, sans-serif;
+  /* Tipografia */
+  --font-display: var(--font-display, "Fraunces"), "Playfair Display", Georgia, serif;
+  --font-sans: var(--font-sans, "Inter"), system-ui, sans-serif;
+  --font-mono: var(--font-mono, "JetBrains Mono"), ui-monospace, monospace;
 
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
 }
 
 @layer base {
@@ -46,12 +52,28 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    font-feature-settings: "ss01" on, "cv11" on; /* alt forms do Inter */
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
-  h1, h2, h3 {
+  body {
+    /* Grain sutil de papel — evita "preto digital" puro */
+    background-image:
+      radial-gradient(ellipse at top, rgba(69, 212, 192, 0.025) 0%, transparent 60%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.95 0 0 0 0 0.93 0 0 0 0 0.89 0 0 0 0.025 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    font-feature-settings: "ss01" on, "ss02" on;
+    letter-spacing: -0.018em;
+  }
+
+  /* Numerais tabulares por padrão em mono */
+  .font-mono, code, pre, kbd, samp {
+    font-feature-settings: "tnum" on, "zero" on;
   }
 }
 
@@ -68,4 +90,73 @@
     background: var(--color-border);
     border-radius: 3px;
   }
+
+  /* Hairlines editoriais — finos como filete de jornal */
+  .hairline {
+    border-color: var(--color-hairline);
+  }
+  .hairline-t { border-top: 1px solid var(--color-hairline); }
+  .hairline-b { border-bottom: 1px solid var(--color-hairline); }
+  .hairline-l { border-left: 1px solid var(--color-hairline); }
+  .hairline-r { border-right: 1px solid var(--color-hairline); }
+
+  /* Sobrancelha (eyebrow) — label letra-espaçada estilo editorial */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  /* Numerais display — pra KPIs e dados */
+  .display-num {
+    font-family: var(--font-mono);
+    font-feature-settings: "tnum" on, "zero" on, "cv11" on;
+    letter-spacing: -0.01em;
+  }
+
+  /* Display serif — manchetes editoriais */
+  .display-serif {
+    font-family: var(--font-display);
+    font-feature-settings: "ss01" on, "ss02" on;
+    font-variation-settings: "SOFT" 50, "opsz" 144;
+    letter-spacing: -0.025em;
+    line-height: 0.95;
+  }
+
+  /* Italic editorial pra detalhes */
+  .display-italic {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-variation-settings: "SOFT" 100, "opsz" 144;
+  }
+
+  /* Tracking widest customizado */
+  .tracking-display { letter-spacing: 0.32em; }
+
+  /* Animações de entrada editorial */
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes draw {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+  .animate-rise {
+    animation: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+  }
+  .animate-draw {
+    animation: draw 0.9s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+    transform-origin: left;
+  }
+}
+
+/* Selection refinada */
+::selection {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
 }

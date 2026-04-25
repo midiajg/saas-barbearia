@@ -184,60 +184,86 @@ export function ClienteCardDrawer({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/60 z-40" onClick={onClose} />
-      <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[480px] bg-[var(--color-surface)] z-50 border-l border-[var(--color-border)] overflow-auto scrollbar-thin">
-        <div className="sticky top-0 bg-[var(--color-surface)] border-b border-[var(--color-border)] p-4 flex items-center justify-between">
-          <h2 className="font-display text-lg">Cliente</h2>
-          <div className="flex items-center gap-1">
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => setEditOpen(true)}
-              title="Editar"
-            >
-              <Pencil className="size-4" />
-            </Button>
-            <Button size="icon" variant="ghost" onClick={onClose}>
-              <X className="size-4" />
-            </Button>
+      <div className="fixed inset-0 bg-black/70 z-40 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[520px] bg-[var(--color-background)] z-50 border-l border-[var(--color-border)] overflow-auto scrollbar-thin">
+        {/* Letterhead */}
+        <div className="sticky top-0 z-10 bg-[var(--color-background)] px-5 sm:px-6 pt-5 pb-4 border-b border-[var(--color-hairline)]">
+          <div className="flex items-center justify-between mb-3">
+            <p className="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-muted)]">
+              Ficha do cliente · Nº{" "}
+              <span className="text-[var(--color-foreground)]">
+                {cliente.id.slice(0, 6).toUpperCase()}
+              </span>
+            </p>
+            <div className="flex items-center gap-1">
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setEditOpen(true)}
+                title="Editar"
+              >
+                <Pencil className="size-3.5" />
+              </Button>
+              <Button size="icon" variant="ghost" onClick={onClose}>
+                <X className="size-3.5" />
+              </Button>
+            </div>
           </div>
+          <div className="h-px bg-[var(--color-foreground)]/40" />
+          <div className="h-px bg-[var(--color-hairline)] mt-1" />
         </div>
 
-        <div className="p-6 space-y-5">
-          <div className="flex items-start gap-4">
-            <div className="size-16 rounded-full bg-[var(--color-primary)]/15 text-[var(--color-primary)] flex items-center justify-center text-2xl font-medium">
-              {cliente.nome.slice(0, 1).toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xl font-medium">{cliente.nome}</p>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-400/15 text-yellow-500 font-medium">
-                  {cliente.fpts} FPTS
-                </span>
-                {nivel && (
-                  <div className="flex items-center gap-0.5">
-                    {Array.from({ length: nivel.numero }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className="size-3.5 fill-yellow-400 text-yellow-400"
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
+        <div className="px-5 sm:px-6 py-6 space-y-6">
+          {/* Identificação editorial */}
+          <div className="space-y-3">
+            <p className="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-muted)]">
+              {nivel ? nivel.nome : "Cliente · Sem nível"}
               {nivel && (
-                <p className="text-xs text-[var(--color-muted)] mt-0.5">
-                  {nivel.nome}
-                </p>
+                <span className="ml-2 text-[var(--color-primary)]">
+                  {Array.from({ length: nivel.numero }).map(() => "★").join("")}
+                </span>
               )}
-            </div>
+            </p>
+            <h2
+              className="display-serif text-3xl sm:text-4xl leading-tight"
+              style={{ fontVariationSettings: '"SOFT" 50, "opsz" 144' }}
+            >
+              {cliente.nome}
+            </h2>
           </div>
 
-          <div className="px-3 py-2 rounded-md bg-[var(--color-background)]/40 text-sm flex items-center justify-between">
-            <span>Última visita</span>
-            <span className="font-medium text-[var(--color-primary)]">
-              {ultimaVisitaTxt}
-            </span>
+          {/* Painel de dados — grid editorial */}
+          <div className="grid grid-cols-2 gap-px bg-[var(--color-hairline)]">
+            <div className="bg-[var(--color-background)] p-4">
+              <p className="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-muted)] mb-2">
+                FPTS
+              </p>
+              <p className="display-num text-2xl text-[var(--color-primary)] font-light leading-none">
+                {cliente.fpts}
+              </p>
+            </div>
+            <div className="bg-[var(--color-background)] p-4">
+              <p className="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-muted)] mb-2">
+                Cashback
+              </p>
+              <p className="display-num text-2xl font-light leading-none">
+                {cliente.cashback_fpts}
+              </p>
+            </div>
+            <div className="col-span-2 bg-[var(--color-background)] px-4 py-3 flex items-baseline justify-between">
+              <p className="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-muted)]">
+                Última visita
+              </p>
+              <p
+                className={`font-mono text-sm tabular-nums ${
+                  cliente.ultima_visita
+                    ? "text-[var(--color-foreground)]"
+                    : "text-[var(--color-muted)]"
+                }`}
+              >
+                {ultimaVisitaTxt}
+              </p>
+            </div>
           </div>
 
           {/* Barra de progresso pro próximo nível */}

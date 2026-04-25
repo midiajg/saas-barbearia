@@ -1,13 +1,18 @@
 import Link from "next/link";
-import { Calendar, Users, DollarSign, TrendingUp, UserX } from "lucide-react";
+import { Calendar, Users, DollarSign, TrendingUp, UserX, ArrowUpRight } from "lucide-react";
 import { requireSession } from "@/lib/auth/session";
 import { AtendimentosRepo } from "@/infrastructure/database/repositories/atendimentos.repo";
 import { EquipeRepo } from "@/infrastructure/database/repositories/equipe.repo";
 import { ClientesRepo } from "@/infrastructure/database/repositories/clientes.repo";
 import { BarbeariasRepo } from "@/infrastructure/database/repositories/barbearias.repo";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatBRL, diasDesde } from "@/lib/utils";
 import { OnboardingChecklist } from "./onboarding-checklist";
+import {
+  Eyebrow,
+  DoubleRule,
+  DisplayNumber,
+  EditorialDivider,
+} from "@/components/editorial";
 
 export default async function DashboardPage() {
   const session = await requireSession();
@@ -52,14 +57,12 @@ export default async function DashboardPage() {
     (a) => a.status !== "cancelado"
   ).length;
 
-  // Clientes ativos = visita nos últimos 60 dias
   const corteAtivos = new Date(hoje);
   corteAtivos.setDate(corteAtivos.getDate() - 60);
   const ativos = clientes.filter(
     (c) => c.ultima_visita && new Date(c.ultima_visita) >= corteAtivos
   ).length;
 
-  // Inativos 30+ dias
   const corteInativos = new Date(hoje);
   corteInativos.setDate(corteInativos.getDate() - 30);
   const inativos = clientes
@@ -86,159 +89,201 @@ export default async function DashboardPage() {
     temClientes: clientes.length > 0,
   };
 
+  const dataFormatada = hoje.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+  });
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-display">
-          Olá, {session.nome.split(" ")[0]}
-        </h1>
-        <p className="text-sm text-[var(--color-muted)]">
-          Visão geral da sua barbearia hoje
-        </p>
-      </div>
+    <div className="space-y-10 sm:space-y-12">
+      {/* Cabeçalho editorial */}
+      <header>
+        <DoubleRule />
+        <div className="py-4 flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2">
+          <div>
+            <Eyebrow marker>Painel · Hoje</Eyebrow>
+            <h1 className="display-serif text-4xl sm:text-5xl mt-2">
+              Olá, <em className="display-italic">{session.nome.split(" ")[0]}.</em>
+            </h1>
+          </div>
+          <p className="font-mono tracking-widest text-xs text-[var(--color-muted)] uppercase">
+            {dataFormatada}
+          </p>
+        </div>
+        <DoubleRule />
+      </header>
 
       <OnboardingChecklist status={onboardingStatus} />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <KpiCard
-          icon={Calendar}
-          label="Agendamentos hoje"
-          value={agendamentosHojeAtivos.toString()}
-        />
-        <KpiCard
-          icon={Users}
-          label="Clientes ativos (60d)"
-          value={ativos.toString()}
-        />
-        <KpiCard
-          icon={DollarSign}
-          label="Faturamento do mês"
-          value={formatBRL(faturamentoMes)}
-        />
-        <KpiCard
-          icon={TrendingUp}
-          label={`Ticket médio (${qtdPagos})`}
-          value={formatBRL(ticketMedio)}
-        />
-      </div>
+      {/* KPIs em grid editorial — sem cards "boxinhos" */}
+      <section>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-[var(--color-hairline)]">
+          <KpiEditorial
+            label="Hoje"
+            valor={agendamentosHojeAtivos.toString()}
+            sublabel="agendamentos"
+            icon={Calendar}
+          />
+          <KpiEditorial
+            label="Ativos · 60d"
+            valor={ativos.toString()}
+            sublabel="clientes"
+            icon={Users}
+          />
+          <KpiEditorial
+            label="Mês corrente"
+            valor={formatBRL(faturamentoMes)}
+            sublabel="faturamento"
+            icon={DollarSign}
+            primary
+          />
+          <KpiEditorial
+            label={`Ticket médio · ${qtdPagos}`}
+            valor={formatBRL(ticketMedio)}
+            sublabel="por atendimento"
+            icon={TrendingUp}
+          />
+        </div>
+      </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Calendar className="size-4 text-[var(--color-primary)]" />
-              Próximos agendamentos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {proximos.length === 0 ? (
-              <p className="text-sm text-[var(--color-muted)]">
-                Nenhum agendamento futuro.{" "}
-                <Link
-                  href="/agenda"
-                  className="text-[var(--color-primary)] hover:underline"
-                >
-                  Ir para Agenda
-                </Link>
-              </p>
-            ) : (
-              <ul className="divide-y divide-[var(--color-border)]">
-                {proximos.map((a) => {
-                  const inicio = new Date(a.inicio);
-                  return (
-                    <li
-                      key={a.id}
-                      className="py-2 flex items-center justify-between text-sm"
-                    >
-                      <div>
-                        <p className="font-medium">
-                          {clientesMap.get(a.cliente_id ?? "") ?? "Cliente"}
-                        </p>
-                        <p className="text-xs text-[var(--color-muted)]">
-                          {inicio.toLocaleDateString("pt-BR", {
-                            day: "2-digit",
-                            month: "short",
-                          })}
-                          {" · "}
-                          {inicio.toLocaleTimeString("pt-BR", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                          {" · "}
-                          {equipeMap.get(a.barbeiro_id) ?? "—"}
-                        </p>
-                      </div>
-                      {a.valor_total && (
-                        <span className="text-xs text-[var(--color-primary)] font-medium">
-                          {formatBRL(Number(a.valor_total))}
-                        </span>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+      {/* Listas em duas colunas editoriais */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12">
+        {/* Próximos agendamentos */}
+        <div>
+          <header className="flex items-baseline justify-between hairline-b pb-2 mb-4">
+            <Eyebrow>Em pauta</Eyebrow>
+            <Link
+              href="/agenda"
+              className="text-xs font-mono tracking-widest uppercase text-[var(--color-muted)] hover:text-[var(--color-primary)] transition-colors flex items-center gap-1"
+            >
+              Agenda <ArrowUpRight className="size-3" />
+            </Link>
+          </header>
+          <h2 className="display-serif text-2xl mb-6">Próximos agendamentos</h2>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <UserX className="size-4 text-[var(--color-warning)]" />
-              Clientes inativos 30+ dias
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {inativos.length === 0 ? (
-              <p className="text-sm text-[var(--color-muted)]">
-                Nenhum cliente inativo
-              </p>
-            ) : (
-              <ul className="divide-y divide-[var(--color-border)]">
-                {inativos.map((c) => (
+          {proximos.length === 0 ? (
+            <p className="text-sm text-[var(--color-muted)] italic font-display">
+              Nada na próxima semana.{" "}
+              <Link
+                href="/agenda"
+                className="text-[var(--color-primary)] hover:underline"
+              >
+                Abrir agenda
+              </Link>
+            </p>
+          ) : (
+            <ul>
+              {proximos.map((a, i) => {
+                const inicio = new Date(a.inicio);
+                return (
+                  <li
+                    key={a.id}
+                    className={`flex items-baseline gap-4 py-3 ${i > 0 ? "hairline-t" : ""}`}
+                  >
+                    <span className="font-mono text-xs tracking-wider text-[var(--color-muted)] w-12 shrink-0">
+                      {String(inicio.getDate()).padStart(2, "0")}/
+                      {String(inicio.getMonth() + 1).padStart(2, "0")}
+                    </span>
+                    <span className="font-mono text-xs tracking-wider text-[var(--color-foreground)] w-12 shrink-0">
+                      {String(inicio.getHours()).padStart(2, "0")}:
+                      {String(inicio.getMinutes()).padStart(2, "0")}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">
+                        {clientesMap.get(a.cliente_id ?? "") ?? "Cliente avulso"}
+                      </p>
+                      <p className="text-xs text-[var(--color-muted)] truncate">
+                        {equipeMap.get(a.barbeiro_id) ?? "—"}
+                      </p>
+                    </div>
+                    {a.valor_total && (
+                      <span className="font-mono text-sm text-[var(--color-primary)] tabular-nums shrink-0">
+                        {formatBRL(Number(a.valor_total))}
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        {/* Inativos */}
+        <div>
+          <header className="flex items-baseline justify-between hairline-b pb-2 mb-4">
+            <Eyebrow>Atenção</Eyebrow>
+            <Link
+              href="/clientes"
+              className="text-xs font-mono tracking-widest uppercase text-[var(--color-muted)] hover:text-[var(--color-foreground)] transition-colors flex items-center gap-1"
+            >
+              Todos <ArrowUpRight className="size-3" />
+            </Link>
+          </header>
+          <h2 className="display-serif text-2xl mb-6">
+            Quem precisa de uma <em className="display-italic">ligação</em>
+          </h2>
+
+          {inativos.length === 0 ? (
+            <p className="text-sm text-[var(--color-muted)] italic font-display">
+              Nenhum cliente inativo. Belíssimo trabalho.
+            </p>
+          ) : (
+            <ul>
+              {inativos.map((c, i) => {
+                const dias = c.ultima_visita
+                  ? diasDesde(new Date(c.ultima_visita))
+                  : 0;
+                return (
                   <li
                     key={c.id}
-                    className="py-2 flex items-center justify-between text-sm"
+                    className={`flex items-baseline gap-4 py-3 ${i > 0 ? "hairline-t" : ""}`}
                   >
-                    <span className="font-medium">{c.nome}</span>
-                    <span className="text-xs text-[var(--color-muted)]">
-                      há{" "}
-                      {c.ultima_visita
-                        ? diasDesde(new Date(c.ultima_visita))
-                        : "?"}{" "}
-                      dias
+                    <UserX className="size-3.5 text-[var(--color-warning)] shrink-0 self-center" />
+                    <span className="flex-1 font-medium truncate">{c.nome}</span>
+                    <span className="font-mono text-xs text-[var(--color-muted)] tabular-nums shrink-0">
+                      há {dias}d
                     </span>
                   </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </section>
+
+      <EditorialDivider ornament="·" className="pt-4" />
     </div>
   );
 }
 
-function KpiCard({
-  icon: Icon,
+function KpiEditorial({
   label,
-  value,
+  valor,
+  sublabel,
+  icon: Icon,
+  primary,
 }: {
-  icon: typeof Calendar;
   label: string;
-  value: string;
+  valor: string;
+  sublabel: string;
+  icon: typeof Calendar;
+  primary?: boolean;
 }) {
   return (
-    <Card>
-      <CardContent className="p-3 sm:p-5">
-        <div className="flex items-center justify-between mb-1 sm:mb-2 gap-2">
-          <p className="text-xs sm:text-sm text-[var(--color-muted)] truncate">
-            {label}
-          </p>
-          <Icon className="size-4 text-[var(--color-primary)] shrink-0" />
-        </div>
-        <p className="text-lg sm:text-2xl font-semibold truncate">{value}</p>
-      </CardContent>
-    </Card>
+    <div className="bg-[var(--color-background)] p-4 sm:p-6 space-y-3 group hover:bg-[var(--color-surface)]/40 transition-colors">
+      <div className="flex items-center justify-between">
+        <span className="eyebrow truncate">{label}</span>
+        <Icon className="size-3.5 text-[var(--color-muted)] shrink-0" />
+      </div>
+      <DisplayNumber
+        value={valor}
+        size="md"
+        className={primary ? "text-[var(--color-primary)]" : ""}
+      />
+      <p className="font-display italic text-xs text-[var(--color-muted)]">
+        {sublabel}
+      </p>
+    </div>
   );
 }
