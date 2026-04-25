@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { supabaseAdmin } from "@/infrastructure/database/client";
 import { getSession } from "@/lib/auth/session";
 
-const BUCKET = "fotos";
+const BUCKET = "[SAAS][BARBEARIA][FOTOS]";
 const MAX_BYTES = 5 * 1024 * 1024; // 5MB
 
 export async function POST(req: Request) {
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           error:
-            "Bucket 'fotos' não existe no Supabase. Crie em Storage e marque como público.",
+            "Bucket '[SAAS][BARBEARIA][FOTOS]' não existe no Supabase. Crie em Storage e marque como público.",
         },
         { status: 500 }
       );
