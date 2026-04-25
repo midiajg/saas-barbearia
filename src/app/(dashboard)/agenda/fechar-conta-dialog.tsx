@@ -190,35 +190,51 @@ export function FecharContaDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Fechar conta</DialogTitle>
-          <DialogDescription>
-            {clienteNome ?? "Cliente avulso"}
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto rounded-none border-[var(--color-hairline)] bg-[var(--color-background)]">
+        <DialogHeader className="space-y-3">
+          <p className="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-muted)]">
+            Fechamento de atendimento
             {clienteNivelNumero != null && (
-              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
+              <span className="ml-2 text-[var(--color-primary)]">
                 Nível {clienteNivelNumero}
               </span>
             )}
+          </p>
+          <div className="h-px bg-[var(--color-foreground)]/40" />
+          <DialogTitle className="display-serif text-2xl">
+            {clienteNome ? (
+              <>
+                Conta de <em className="display-italic">{clienteNome}.</em>
+              </>
+            ) : (
+              <>Cliente <em className="display-italic">avulso.</em></>
+            )}
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            Fechar conta do atendimento
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-[var(--color-muted)]">Valor do serviço</span>
-              <span className="font-medium">{formatBRL(valorBase)}</span>
+          <div className="space-y-2 hairline-t hairline-b py-3">
+            <div className="flex items-baseline justify-between">
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-muted)]">
+                Serviços
+              </span>
+              <span className="font-mono tabular-nums text-sm">{formatBRL(valorBase)}</span>
             </div>
             {valorProdutos > 0 && (
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-[var(--color-muted)]">Produtos</span>
-                <span className="font-medium">{formatBRL(valorProdutos)}</span>
+              <div className="flex items-baseline justify-between">
+                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-muted)]">
+                  Produtos
+                </span>
+                <span className="font-mono tabular-nums text-sm">{formatBRL(valorProdutos)}</span>
               </div>
             )}
             <div className="flex items-center justify-between gap-3">
               <Label
                 htmlFor="descontoExtra"
-                className="text-sm text-[var(--color-muted)]"
+                className="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-muted)]"
               >
                 Desconto extra
               </Label>
@@ -229,7 +245,7 @@ export function FecharContaDialog({
                 step="0.01"
                 value={descontoExtra}
                 onChange={(e) => setDescontoExtra(e.target.value)}
-                className="w-28 text-right"
+                className="w-28 text-right h-9 rounded-none bg-transparent font-mono tabular-nums border-[var(--color-hairline)]"
               />
             </div>
           </div>
@@ -392,17 +408,19 @@ export function FecharContaDialog({
           )}
 
           <div className="space-y-2">
-            <Label>Forma de pagamento</Label>
-            <div className="grid grid-cols-5 gap-1">
+            <Label className="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-muted)]">
+              Forma de pagamento
+            </Label>
+            <div className="grid grid-cols-5 gap-px bg-[var(--color-hairline)] border border-[var(--color-hairline)]">
               {FORMAS.map((f) => (
                 <button
                   key={f.value}
                   onClick={() => setForma(f.value)}
                   className={cn(
-                    "p-2 text-xs rounded-md border transition-colors",
+                    "py-2.5 px-1 text-[10px] font-mono tracking-widest uppercase bg-[var(--color-background)] transition-colors",
                     forma === f.value
-                      ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-                      : "border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
+                      ? "bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
+                      : "text-[var(--color-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-foreground)]"
                   )}
                 >
                   {f.label}
@@ -411,21 +429,31 @@ export function FecharContaDialog({
             </div>
           </div>
 
-          <div className="p-4 rounded-md bg-[var(--color-background)]/50 border border-[var(--color-border)]">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-[var(--color-muted)]">Total</span>
-              <span className="text-2xl font-semibold text-[var(--color-primary)]">
+          <div className="hairline-t hairline-b py-4">
+            <div className="flex items-baseline justify-between">
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-muted)]">
+                Total a pagar
+              </span>
+              <span className="display-num text-3xl font-light text-[var(--color-primary)]">
                 {formatBRL(valorFinal)}
               </span>
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="rounded-none h-11 font-mono tracking-widest text-[10px] uppercase border-[var(--color-hairline)]"
+            >
               Cancelar
             </Button>
-            <Button onClick={confirmar} disabled={pending}>
-              {pending ? "Processando..." : "Confirmar pagamento"}
+            <Button
+              onClick={confirmar}
+              disabled={pending}
+              className="rounded-none h-11 font-mono tracking-widest text-[10px] uppercase"
+            >
+              {pending ? "Processando..." : "Confirmar pagamento →"}
             </Button>
           </div>
         </div>

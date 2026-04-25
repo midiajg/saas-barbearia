@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Calendar, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { requireSession } from "@/lib/auth/session";
 import { AtendimentosRepo } from "@/infrastructure/database/repositories/atendimentos.repo";
 import { EquipeRepo } from "@/infrastructure/database/repositories/equipe.repo";
 import { ClientesRepo } from "@/infrastructure/database/repositories/clientes.repo";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatBRL } from "@/lib/utils";
+import { Eyebrow, DoubleRule } from "@/components/editorial";
 
 const DIAS_PT = [
   "Domingo",
@@ -79,45 +79,65 @@ export default async function SemanaPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <Button size="icon" variant="outline" asChild>
-            <Link href={`/agenda/semana?data=${isoDia(semanaAnterior)}`}>
-              <ChevronLeft className="size-4" />
-            </Link>
-          </Button>
-          <div className="text-center min-w-48">
-            <p className="font-display text-lg leading-tight">
-              {inicioSemana.toLocaleDateString("pt-BR", {
-                day: "2-digit",
-                month: "short",
-              })}{" "}
-              —{" "}
-              {fimSemana.toLocaleDateString("pt-BR", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })}
-            </p>
-            <p className="text-xs text-[var(--color-muted)]">
-              Visão semanal
-            </p>
+      <header className="space-y-3">
+        <DoubleRule />
+        <div className="py-1 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
+          <div>
+            <Eyebrow marker className="mb-2">
+              Agenda · Visão da semana
+            </Eyebrow>
+            <div className="flex items-center gap-3">
+              <Button
+                size="icon"
+                variant="ghost"
+                asChild
+                className="rounded-none border border-[var(--color-hairline)]"
+              >
+                <Link href={`/agenda/semana?data=${isoDia(semanaAnterior)}`}>
+                  <ChevronLeft className="size-4" />
+                </Link>
+              </Button>
+              <div className="min-w-[200px]">
+                <h1 className="display-serif text-2xl sm:text-3xl leading-none">
+                  {inicioSemana.toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "long",
+                  })}{" "}
+                  <em className="display-italic text-[var(--color-muted)]">a</em>{" "}
+                  {fimSemana.toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "long",
+                  })}
+                </h1>
+                <p className="font-mono text-[10px] tracking-[0.22em] uppercase text-[var(--color-muted)] mt-1">
+                  {inicioSemana.toLocaleDateString("pt-BR", { year: "numeric" })}
+                </p>
+              </div>
+              <Button
+                size="icon"
+                variant="ghost"
+                asChild
+                className="rounded-none border border-[var(--color-hairline)]"
+              >
+                <Link href={`/agenda/semana?data=${isoDia(semanaSeguinte)}`}>
+                  <ChevronRight className="size-4" />
+                </Link>
+              </Button>
+            </div>
           </div>
-          <Button size="icon" variant="outline" asChild>
-            <Link href={`/agenda/semana?data=${isoDia(semanaSeguinte)}`}>
-              <ChevronRight className="size-4" />
-            </Link>
+
+          <Button
+            variant="ghost"
+            asChild
+            className="rounded-none h-9 font-mono tracking-widest text-[10px] uppercase border border-[var(--color-hairline)] hover:bg-[var(--color-surface)]"
+          >
+            <Link href="/agenda">← Voltar pra dia</Link>
           </Button>
         </div>
+        <DoubleRule />
+      </header>
 
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/agenda">Voltar pra dia</Link>
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-7 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-7 gap-px bg-[var(--color-hairline)] border border-[var(--color-hairline)]">
         {Array.from(porDia.entries()).map(([diaIso, items]) => {
           const d = new Date(diaIso + "T12:00:00");
           const ehHoje = isoDia(new Date()) === diaIso;
@@ -129,81 +149,81 @@ export default async function SemanaPage({
             0
           );
           return (
-            <Card
+            <div
               key={diaIso}
-              className={ehHoje ? "border-[var(--color-primary)]" : ""}
+              className={`bg-[var(--color-background)] p-4 space-y-3 min-h-[180px] ${ehHoje ? "ring-1 ring-inset ring-[var(--color-primary)]/40" : ""}`}
             >
-              <CardContent className="p-3 space-y-2">
-                <div className="flex items-baseline justify-between border-b border-[var(--color-border)] pb-2">
-                  <div>
-                    <p className="text-xs text-[var(--color-muted)] uppercase">
-                      {diaNome}
-                    </p>
-                    <p className="font-display text-lg">
-                      {d.getDate().toString().padStart(2, "0")}/
-                      {(d.getMonth() + 1).toString().padStart(2, "0")}
-                    </p>
-                  </div>
-                  <Link
-                    href={`/agenda?data=${diaIso}`}
-                    className="text-xs text-[var(--color-primary)] hover:underline"
-                  >
-                    abrir
-                  </Link>
+              <div className="flex items-baseline justify-between hairline-b pb-2">
+                <div>
+                  <p className="font-mono text-[9px] tracking-[0.22em] uppercase text-[var(--color-muted)]">
+                    {diaNome}
+                    {ehHoje && (
+                      <span className="ml-1 text-[var(--color-primary)]">·</span>
+                    )}
+                  </p>
+                  <p className="display-serif text-2xl leading-none mt-1">
+                    {d.getDate().toString().padStart(2, "0")}
+                  </p>
                 </div>
+                <Link
+                  href={`/agenda?data=${diaIso}`}
+                  className="font-mono text-[10px] tracking-widest uppercase text-[var(--color-muted)] hover:text-[var(--color-primary)] transition-colors"
+                >
+                  Abrir →
+                </Link>
+              </div>
 
-                {items.length === 0 ? (
-                  <Link
-                    href={`/agenda?data=${diaIso}`}
-                    className="block text-xs text-center py-4 text-[var(--color-muted)] border border-dashed border-[var(--color-border)] rounded hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
-                  >
-                    <Calendar className="size-4 mx-auto mb-1" />
-                    Sem agendamentos
-                  </Link>
-                ) : (
-                  <ul className="space-y-1">
-                    {items
-                      .sort((a, b) => a.inicio.localeCompare(b.inicio))
-                      .map((a) => {
-                        const inicio = new Date(a.inicio);
-                        return (
-                          <li
-                            key={a.id}
-                            className="text-xs p-1.5 rounded bg-[var(--color-primary)]/5 border-l-2 border-[var(--color-primary)]"
-                          >
-                            <div className="flex items-baseline justify-between">
-                              <span className="font-medium">
-                                {String(inicio.getHours()).padStart(2, "0")}:
-                                {String(inicio.getMinutes()).padStart(2, "0")}
-                              </span>
-                              <span className="text-[10px] text-[var(--color-muted)] capitalize">
-                                {a.status}
-                              </span>
-                            </div>
-                            <p className="truncate">
-                              {clientesMap.get(a.cliente_id ?? "") ?? "Cliente"}
-                            </p>
-                            <p className="text-[10px] text-[var(--color-muted)] truncate">
-                              {equipeMap.get(a.barbeiro_id) ?? "—"}
-                            </p>
-                          </li>
-                        );
-                      })}
-                  </ul>
-                )}
+              {items.length === 0 ? (
+                <Link
+                  href={`/agenda?data=${diaIso}`}
+                  className="block text-xs text-center py-6 text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)] transition-colors italic font-display"
+                >
+                  <Calendar className="size-4 mx-auto mb-1.5 opacity-50" />
+                  Sem agendamentos
+                </Link>
+              ) : (
+                <ul className="space-y-2">
+                  {items
+                    .sort((a, b) => a.inicio.localeCompare(b.inicio))
+                    .map((a) => {
+                      const inicio = new Date(a.inicio);
+                      return (
+                        <li
+                          key={a.id}
+                          className="text-xs hairline-b pb-1.5 last:border-b-0"
+                        >
+                          <div className="flex items-baseline justify-between">
+                            <span className="font-mono tabular-nums text-[var(--color-foreground)]">
+                              {String(inicio.getHours()).padStart(2, "0")}:
+                              {String(inicio.getMinutes()).padStart(2, "0")}
+                            </span>
+                            <span className="font-mono text-[9px] tracking-widest uppercase text-[var(--color-muted)]">
+                              {a.status}
+                            </span>
+                          </div>
+                          <p className="truncate font-medium mt-0.5">
+                            {clientesMap.get(a.cliente_id ?? "") ?? "Cliente"}
+                          </p>
+                          <p className="text-[10px] text-[var(--color-muted)] truncate italic font-display">
+                            {equipeMap.get(a.barbeiro_id) ?? "—"}
+                          </p>
+                        </li>
+                      );
+                    })}
+                </ul>
+              )}
 
-                {items.length > 0 && (
-                  <div className="pt-2 border-t border-[var(--color-border)] flex items-baseline justify-between text-xs">
-                    <span className="text-[var(--color-muted)]">
-                      {items.length} atend.
-                    </span>
-                    <span className="font-medium text-[var(--color-primary)]">
-                      {formatBRL(totalDia)}
-                    </span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+              {items.length > 0 && (
+                <div className="pt-2 hairline-t flex items-baseline justify-between">
+                  <span className="font-mono text-[10px] tracking-widest uppercase text-[var(--color-muted)]">
+                    {items.length} atend.
+                  </span>
+                  <span className="font-mono tabular-nums text-sm text-[var(--color-primary)]">
+                    {formatBRL(totalDia)}
+                  </span>
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
