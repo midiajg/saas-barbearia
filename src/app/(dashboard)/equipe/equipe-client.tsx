@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { criarPessoa, atualizarPessoa } from "./actions";
+import { FotoUpload } from "@/components/foto-upload";
 import type { Cargo, Equipe } from "@/infrastructure/database/types";
 
 const CARGO_LABEL: Record<Cargo, string> = {
@@ -108,6 +109,7 @@ function PessoaDialog({
   editing: Equipe | null;
 }) {
   const [pending, startTransition] = useTransition();
+  const [fotoUrl, setFotoUrl] = useState<string | null>(editing?.foto_url ?? null);
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
@@ -133,6 +135,14 @@ function PessoaDialog({
           <DialogTitle>{editing ? "Editar pessoa" : "Nova pessoa"}</DialogTitle>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Foto</Label>
+            <FotoUpload
+              value={fotoUrl}
+              onChange={setFotoUrl}
+              hiddenInputName="foto_url"
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="nome">Nome</Label>
             <Input id="nome" name="nome" defaultValue={editing?.nome} required />

@@ -11,6 +11,7 @@ const baseSchema = z.object({
   nome: z.string().min(2),
   telefone: z.string().optional().or(z.literal("")),
   email: z.string().email().optional().or(z.literal("")),
+  foto_url: z.string().url().optional().or(z.literal("")),
   endereco: z.string().optional().or(z.literal("")),
   aniversario: z
     .string()
@@ -27,6 +28,7 @@ function parse(formData: FormData) {
     nome: formData.get("nome"),
     telefone: formData.get("telefone"),
     email: formData.get("email"),
+    foto_url: formData.get("foto_url"),
     endereco: formData.get("endereco"),
     aniversario: formData.get("aniversario"),
     filhos: formData.get("filhos"),
@@ -68,6 +70,7 @@ export async function atualizarCliente(id: string, formData: FormData) {
     nome: data.nome,
     telefone: data.telefone || null,
     email: data.email || null,
+    foto_url: data.foto_url || null,
     dados_pessoais: toDadosPessoais(data),
   });
   revalidatePath("/clientes");

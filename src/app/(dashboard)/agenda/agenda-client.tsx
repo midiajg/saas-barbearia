@@ -219,10 +219,19 @@ export function AgendaClient({
                 className="p-3 border-l border-[var(--color-border)] flex items-center gap-2"
               >
                 <div
-                  className="size-8 rounded-full flex items-center justify-center text-white text-xs font-medium shrink-0"
+                  className="size-8 rounded-full flex items-center justify-center text-white text-xs font-medium shrink-0 overflow-hidden"
                   style={{ backgroundColor: b.cor }}
                 >
-                  {b.nome.slice(0, 1).toUpperCase()}
+                  {b.foto_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={b.foto_url}
+                      alt={b.nome}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    b.nome.slice(0, 1).toUpperCase()
+                  )}
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">{b.nome}</p>

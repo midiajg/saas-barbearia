@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { criarCliente, atualizarCliente } from "./actions";
+import { FotoUpload } from "@/components/foto-upload";
 import type { Cliente } from "@/infrastructure/database/types";
 
 export function ClienteDialog({
@@ -24,6 +25,7 @@ export function ClienteDialog({
   editing: Cliente | null;
 }) {
   const [pending, startTransition] = useTransition();
+  const [fotoUrl, setFotoUrl] = useState<string | null>(editing?.foto_url ?? null);
   const d = editing?.dados_pessoais ?? {};
 
   function handleSubmit(formData: FormData) {
@@ -52,6 +54,14 @@ export function ClienteDialog({
           </DialogTitle>
         </DialogHeader>
         <form action={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Foto</Label>
+            <FotoUpload
+              value={fotoUrl}
+              onChange={setFotoUrl}
+              hiddenInputName="foto_url"
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="nome">Nome</Label>
             <Input id="nome" name="nome" defaultValue={editing?.nome} required />

@@ -88,6 +88,10 @@ export type WhatsappConfig = {
   instancia: string | null;
 };
 
+export type Paleta = {
+  primary?: string;
+};
+
 export type BarbeariaConfig = {
   horarios: Horario[];
   feriados: Feriado[];
@@ -97,6 +101,7 @@ export type BarbeariaConfig = {
   catalogo_servicos: CatalogoServico[];
   catalogo_produtos: CatalogoProduto[];
   whatsapp: WhatsappConfig;
+  paleta?: Paleta;
 };
 
 export type DadosPessoais = {
