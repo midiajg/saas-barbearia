@@ -115,6 +115,25 @@ export class AtendimentosRepo extends BaseRepo {
     if (error) throw error;
   }
 
+  /**
+   * Conjunto de cliente_ids que o barbeiro já atendeu ou tem agendado.
+   * Usado pra restringir a visão de clientes do barbeiro logado.
+   */
+  async clienteIdsDoBarbeiro(barbeiroId: string): Promise<Set<string>> {
+    const { data, error } = await this.sb
+      .from(TABELAS.atendimentos)
+      .select("cliente_id")
+      .eq("barbearia_id", this.barbeariaId)
+      .eq("barbeiro_id", barbeiroId)
+      .not("cliente_id", "is", null);
+    if (error) throw error;
+    const ids = new Set<string>();
+    for (const row of data ?? []) {
+      if (row.cliente_id) ids.add(row.cliente_id);
+    }
+    return ids;
+  }
+
   async marcarLembreteEnviado(id: string): Promise<void> {
     const { error } = await this.sb
       .from(TABELAS.atendimentos)

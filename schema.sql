@@ -45,6 +45,9 @@ create table if not exists "[SAAS][BARBEARIA][VICTOR][equipe]" (
 );
 create index if not exists equipe_barbearia_idx
   on "[SAAS][BARBEARIA][VICTOR][equipe]" (barbearia_id);
+-- Flag de barbeiro líder (idempotente)
+alter table "[SAAS][BARBEARIA][VICTOR][equipe]"
+  add column if not exists lider boolean not null default false;
 
 -- 3. clientes (auth_email + auth_senha_hash opcionais = cliente pode logar
 --    no portal /c/[slug] pra se autoagendar)

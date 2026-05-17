@@ -126,6 +126,34 @@ export async function registrarEventoFpts(
   revalidatePath("/agenda");
 }
 
+export async function registrarPontuacaoCustom(
+  clienteId: string,
+  pontuacaoId: string
+) {
+  const session = await requireSession();
+  const clientesRepo = new ClientesRepo(session.barbeariaId);
+  const barbeariasRepo = new BarbeariasRepo(session.barbeariaId);
+  const barbearia = await barbeariasRepo.get();
+  if (!barbearia) throw new Error("Barbearia não encontrada");
+
+  const regra = (barbearia.config.pontuacoes_custom ?? []).find(
+    (p) => p.id === pontuacaoId && p.ativo
+  );
+  if (!regra) throw new Error("Pontuação personalizada não encontrada");
+
+  await clientesRepo.registrarEvento(
+    clienteId,
+    {
+      tipo: "ajuste",
+      pontos: regra.valor,
+      descricao: `${regra.icone} ${regra.label}`,
+    },
+    barbearia.config.niveis
+  );
+  revalidatePath("/clientes");
+  revalidatePath("/agenda");
+}
+
 export async function deletarCliente(id: string) {
   const session = await requireSession();
   const repo = new ClientesRepo(session.barbeariaId);

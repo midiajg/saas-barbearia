@@ -14,17 +14,33 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { adicionarBloqueio, removerBloqueio } from "./actions";
-import type { Bloqueio, Equipe } from "@/infrastructure/database/types";
+import type {
+  Bloqueio,
+  Equipe,
+  MotivoBloqueio,
+} from "@/infrastructure/database/types";
+
+const MOTIVO_LABEL: Record<MotivoBloqueio, string> = {
+  almoco: "Almoço",
+  ausencia_medica: "Ausência médica",
+  folga: "Folga",
+  outros: "Outros",
+};
 
 export function BloqueiosClient({
   bloqueios,
   equipe,
+  sessionEquipeId,
+  barbeiroLogado,
 }: {
   bloqueios: Bloqueio[];
   equipe: Equipe[];
+  sessionEquipeId: string;
+  barbeiroLogado: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [motivoTipo, setMotivoTipo] = useState<MotivoBloqueio>("almoco");
 
   const equipeMap = new Map(equipe.map((e) => [e.id, e.nome]));
 
@@ -101,8 +117,10 @@ export function BloqueiosClient({
                       minute: "2-digit",
                     })}
                   </p>
-                  {b.motivo && (
+                  {(b.motivo_tipo || b.motivo) && (
                     <p className="text-xs italic text-[var(--color-muted)] mt-1">
+                      {b.motivo_tipo ? MOTIVO_LABEL[b.motivo_tipo] : null}
+                      {b.motivo_tipo && b.motivo ? " · " : null}
                       {b.motivo}
                     </p>
                   )}
@@ -132,7 +150,9 @@ export function BloqueiosClient({
                 key={b.id}
                 className="text-xs text-[var(--color-muted)] p-2 border border-[var(--color-border)] rounded"
               >
-                {equipeMap.get(b.barbeiro_id)} — {b.motivo ?? "—"} —{" "}
+                {equipeMap.get(b.barbeiro_id)} —{" "}
+                {b.motivo_tipo ? MOTIVO_LABEL[b.motivo_tipo] : b.motivo ?? "—"}
+                {" — "}
                 {new Date(b.inicio).toLocaleDateString("pt-BR")}
               </div>
             ))}
@@ -146,21 +166,25 @@ export function BloqueiosClient({
             <DialogTitle>Novo bloqueio</DialogTitle>
           </DialogHeader>
           <form action={adicionar} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="barbeiro_id">Quem fica indisponível</Label>
-              <select
-                id="barbeiro_id"
-                name="barbeiro_id"
-                required
-                className="w-full h-9 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm"
-              >
-                {equipe.map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {e.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {barbeiroLogado ? (
+              <input type="hidden" name="barbeiro_id" value={sessionEquipeId} />
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="barbeiro_id">Quem fica indisponível</Label>
+                <select
+                  id="barbeiro_id"
+                  name="barbeiro_id"
+                  required
+                  className="w-full h-9 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm"
+                >
+                  {equipe.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.nome}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="data">Data</Label>
@@ -194,12 +218,28 @@ export function BloqueiosClient({
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="motivo">Motivo (opcional)</Label>
-              <Input
-                id="motivo"
-                name="motivo"
-                placeholder="Almoço, folga, treinamento..."
-              />
+              <Label htmlFor="motivo_tipo">Motivo</Label>
+              <select
+                id="motivo_tipo"
+                name="motivo_tipo"
+                value={motivoTipo}
+                onChange={(e) => setMotivoTipo(e.target.value as MotivoBloqueio)}
+                className="w-full h-9 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm"
+              >
+                {(Object.keys(MOTIVO_LABEL) as MotivoBloqueio[]).map((m) => (
+                  <option key={m} value={m}>
+                    {MOTIVO_LABEL[m]}
+                  </option>
+                ))}
+              </select>
+              {motivoTipo === "outros" && (
+                <Input
+                  id="motivo"
+                  name="motivo"
+                  placeholder="Descreva o motivo"
+                  required
+                />
+              )}
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button

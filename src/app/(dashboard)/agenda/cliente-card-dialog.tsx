@@ -20,7 +20,7 @@ import {
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useTransition } from "react";
-import { cn, diasDesde, formatBRL } from "@/lib/utils";
+import { cn, diasDesde, formatBRL, telefoneParaWhatsapp } from "@/lib/utils";
 import { nivelAtual } from "@/domain/fpts";
 import { mudarStatusAction } from "./actions";
 import type {
@@ -71,8 +71,9 @@ export function ClienteCardDialog({
   fptsRegras,
   onFecharConta,
 }: Props) {
-  // Começa já mostrando tudo (mockup)
-  const [expandido, setExpandido] = useState(true);
+  // Privacidade: começa OCULTO. Barbeiro abre o "olhinho" só quando precisa
+  // ver dados pessoais (endereço, aniversário, filhos, profissão, hobby).
+  const [expandido, setExpandido] = useState(false);
   const [showFptsDialog, setShowFptsDialog] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -335,13 +336,28 @@ export function ClienteCardDialog({
                     >
                       <Info className="size-4" />
                     </button>
-                    <button
-                      disabled
-                      className="size-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 cursor-not-allowed"
-                      title="Última conversa (em breve)"
-                    >
-                      <MessageCircle className="size-4" />
-                    </button>
+                    {(() => {
+                      const wa = telefoneParaWhatsapp(cliente.telefone);
+                      return wa ? (
+                        <a
+                          href={wa}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="size-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition"
+                          title={`WhatsApp · ${cliente.telefone}`}
+                        >
+                          <MessageCircle className="size-4" />
+                        </a>
+                      ) : (
+                        <button
+                          disabled
+                          className="size-8 rounded-full bg-white/10 flex items-center justify-center text-white/40 cursor-not-allowed"
+                          title="Sem telefone cadastrado"
+                        >
+                          <MessageCircle className="size-4" />
+                        </button>
+                      );
+                    })()}
                     <a
                       href="/clientes"
                       className="size-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition"

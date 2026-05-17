@@ -107,7 +107,8 @@ const SECTIONS: NavSection[] = [
         href: "/config/bloqueios",
         label: "Bloqueios (folga)",
         icon: Ban,
-        cargos: ["dono", "gerente"],
+        // Barbeiro também acessa pra bloquear a própria agenda.
+        cargos: ["dono", "gerente", "barbeiro"],
       },
       {
         href: "/config/fpts",
@@ -160,10 +161,7 @@ export function Sidebar({ cargo }: { cargo: Cargo }) {
             <Scissors className="size-4" />
           </div>
           <div className="min-w-0">
-            <p
-              className="font-display text-base leading-tight"
-              style={{ fontVariationSettings: '"SOFT" 50, "opsz" 36' }}
-            >
+            <p className="font-display text-base leading-tight">
               Caderno do
               <br />
               <em className="display-italic">Salão</em>

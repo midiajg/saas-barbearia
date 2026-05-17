@@ -13,6 +13,7 @@ const baseSchema = z.object({
   cor: z.string().default("#45D4C0"),
   comissao: z.coerce.number().min(0).max(100),
   foto_url: z.string().optional(),
+  lider: z.boolean().default(false),
 });
 
 export async function criarPessoa(formData: FormData) {
@@ -24,6 +25,7 @@ export async function criarPessoa(formData: FormData) {
     cor: formData.get("cor") || "#45D4C0",
     comissao: formData.get("comissao"),
     foto_url: formData.get("foto_url") || undefined,
+    lider: formData.get("lider") === "on",
   });
   const senha = formData.get("senha");
   if (typeof senha !== "string" || senha.length < 8)
@@ -39,6 +41,7 @@ export async function criarPessoa(formData: FormData) {
     cor: data.cor,
     comissaoPct: data.comissao,
     fotoUrl: data.foto_url,
+    lider: data.lider,
   });
   revalidatePath("/equipe");
 }
@@ -52,6 +55,7 @@ export async function atualizarPessoa(id: string, formData: FormData) {
     cor: formData.get("cor") || "#45D4C0",
     comissao: formData.get("comissao"),
     foto_url: formData.get("foto_url") || undefined,
+    lider: formData.get("lider") === "on",
   });
   const ativo = formData.get("ativo") === "on";
 
@@ -64,6 +68,7 @@ export async function atualizarPessoa(id: string, formData: FormData) {
     comissao_pct: data.comissao,
     foto_url: data.foto_url ?? null,
     ativo,
+    lider: data.lider,
   });
 
   const senha = formData.get("senha");

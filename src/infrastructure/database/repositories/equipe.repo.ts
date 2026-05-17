@@ -48,6 +48,7 @@ export class EquipeRepo extends BaseRepo {
     fotoUrl?: string;
     cor?: string;
     comissaoPct?: number;
+    lider?: boolean;
   }): Promise<Equipe> {
     const { data, error } = await this.sb
       .from(TABELAS.equipe)
@@ -60,6 +61,7 @@ export class EquipeRepo extends BaseRepo {
         foto_url: input.fotoUrl,
         cor: input.cor ?? "#45D4C0",
         comissao_pct: input.comissaoPct ?? 50,
+        lider: input.lider ?? false,
       })
       .select()
       .single();
@@ -77,6 +79,7 @@ export class EquipeRepo extends BaseRepo {
       cor: string;
       comissao_pct: number;
       ativo: boolean;
+      lider: boolean;
     }>
   ): Promise<Equipe> {
     const { data, error } = await this.sb

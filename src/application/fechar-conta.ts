@@ -76,6 +76,22 @@ export async function fecharConta(input: z.infer<typeof schema>) {
     0
   );
 
+  // Snapshot do custo de material por serviço — usado pelo relatório de
+  // comissões pra abater da base de cálculo. Resolve % no preço cheio.
+  const catalogoServicos = new Map(
+    barbearia.config.catalogo_servicos.map((s) => [s.id, s])
+  );
+  const servicosComCusto = aplicacaoPacote.servicos.map((s) => {
+    const catalogo = catalogoServicos.get(s.id);
+    const cm = catalogo?.custo_material;
+    if (!cm || cm.valor <= 0) return s;
+    const custoReais =
+      cm.tipo === "percentual"
+        ? Math.round(s.preco * (cm.valor / 100) * 100) / 100
+        : Math.round(cm.valor * 100) / 100;
+    return { ...s, custo_material: custoReais };
+  });
+
   // Resolve produtos vendidos aplicando desconto por nível
   const produtosVendidos: ProdutoVendido[] = [];
   let valorProdutos = 0;
@@ -107,6 +123,7 @@ export async function fecharConta(input: z.infer<typeof schema>) {
         preco: precoFinal,
         qtd: item.quantidade,
         desconto_pct: descPct || undefined,
+        comissao: p.comissao && p.comissao.valor > 0 ? p.comissao : undefined,
       });
       valorProdutos += precoFinal * item.quantidade;
     }
@@ -130,7 +147,7 @@ export async function fecharConta(input: z.infer<typeof schema>) {
     .from(TABELAS.atendimentos)
     .update({
       status: "realizado",
-      servicos: aplicacaoPacote.servicos,
+      servicos: servicosComCusto,
       produtos: produtosVendidos.length > 0 ? produtosVendidos : null,
       valor_total: valorBase.toFixed(2),
       desconto: descontoExtra.toFixed(2),

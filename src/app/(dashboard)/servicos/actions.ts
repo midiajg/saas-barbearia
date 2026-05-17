@@ -7,6 +7,11 @@ import { requireDonoOuGerente } from "@/lib/auth/session";
 import { BarbeariasRepo } from "@/infrastructure/database/repositories/barbearias.repo";
 import type { CatalogoServico } from "@/infrastructure/database/types";
 
+const custoMaterialSchema = z.object({
+  tipo: z.enum(["real", "percentual"]),
+  valor: z.number().min(0),
+});
+
 const schema = z.object({
   nome: z.string().min(2),
   descricao: z.string().optional(),
@@ -14,17 +19,28 @@ const schema = z.object({
   preco_quinzenal: z.coerce.number().min(0),
   preco_mensal: z.coerce.number().min(0),
   preco_eventual: z.coerce.number().min(0),
+  custoMaterial: z.string().optional(),
 });
 
 function parse(formData: FormData) {
-  return schema.parse({
+  const raw = schema.parse({
     nome: formData.get("nome"),
     descricao: formData.get("descricao") || undefined,
     duracao_min: formData.get("duracao_min"),
     preco_quinzenal: formData.get("preco_quinzenal"),
     preco_mensal: formData.get("preco_mensal"),
     preco_eventual: formData.get("preco_eventual"),
+    custoMaterial: formData.get("custoMaterial") || undefined,
   });
+  let custoMaterial: { tipo: "real" | "percentual"; valor: number } | null = null;
+  if (raw.custoMaterial) {
+    try {
+      custoMaterial = custoMaterialSchema.parse(JSON.parse(raw.custoMaterial));
+    } catch {
+      throw new Error("Custo de material inválido");
+    }
+  }
+  return { ...raw, custoMaterial };
 }
 
 export async function criarServico(formData: FormData) {
@@ -43,6 +59,7 @@ export async function criarServico(formData: FormData) {
     preco_mensal: data.preco_mensal,
     preco_eventual: data.preco_eventual,
     ativo: true,
+    custo_material: data.custoMaterial,
   };
   await repo.salvarCatalogoServicos([
     ...barbearia.config.catalogo_servicos,
@@ -70,6 +87,7 @@ export async function atualizarServico(id: string, formData: FormData) {
           preco_mensal: data.preco_mensal,
           preco_eventual: data.preco_eventual,
           ativo,
+          custo_material: data.custoMaterial,
         }
       : s
   );

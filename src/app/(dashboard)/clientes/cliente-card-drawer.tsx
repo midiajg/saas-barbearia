@@ -15,23 +15,27 @@ import {
   Minus,
   Package2,
   Infinity as InfIcon,
+  Eye,
+  EyeOff,
+  MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ClienteDialog } from "./cliente-dialog";
-import { registrarEventoFpts } from "./actions";
+import { registrarEventoFpts, registrarPontuacaoCustom } from "./actions";
 import {
   venderPacoteAoCliente,
   cancelarPacoteDoCliente,
 } from "../produtos/pacotes/actions";
-import { diasDesde, formatBRL } from "@/lib/utils";
+import { diasDesde, formatBRL, telefoneParaWhatsapp } from "@/lib/utils";
 import { proximoNivel } from "@/domain/fpts";
 import { pacoteEstaAtivo } from "@/domain/pacotes";
 import type {
   CatalogoServico,
   Cliente,
+  FptsRegraCustom,
   FptsRegras,
   Nivel,
   Pacote,
@@ -52,6 +56,7 @@ export function ClienteCardDrawer({
   pacotes,
   servicos,
   fptsRegras,
+  pontuacoesCustom,
   onClose,
 }: {
   cliente: Cliente;
@@ -60,6 +65,7 @@ export function ClienteCardDrawer({
   pacotes: Pacote[];
   servicos: CatalogoServico[];
   fptsRegras: FptsRegras;
+  pontuacoesCustom: FptsRegraCustom[];
   onClose: () => void;
 }) {
   const prox = proximoNivel(cliente.fpts, niveis);
@@ -78,6 +84,9 @@ export function ClienteCardDrawer({
   const [ajusteDescricao, setAjusteDescricao] = useState("");
   const [pacoteAberto, setPacoteAberto] = useState(false);
   const [pacoteSel, setPacoteSel] = useState<string>("");
+  // Privacidade: dados sensíveis começam OCULTOS. Toggle do olhinho revela.
+  const [mostrarDados, setMostrarDados] = useState(false);
+  const whatsappUrl = telefoneParaWhatsapp(cliente.telefone);
   const pa = cliente.pacote_ativo;
   const pacoteAtual = pacoteEstaAtivo(pa) ? pa : null;
   const pacotesAtivos = pacotes.filter((p) => p.ativo);
@@ -154,6 +163,17 @@ export function ClienteCardDrawer({
     });
   }
 
+  function registrarCustom(pontuacao: FptsRegraCustom) {
+    startTransition(async () => {
+      try {
+        await registrarPontuacaoCustom(cliente.id, pontuacao.id);
+        toast.success(`+${pontuacao.valor} FPTS — ${pontuacao.label}`);
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Erro ao registrar");
+      }
+    });
+  }
+
   function salvarAjuste() {
     const n = Number.parseInt(ajustePontos, 10);
     if (Number.isNaN(n) || n === 0) {
@@ -199,6 +219,29 @@ export function ClienteCardDrawer({
               <Button
                 size="icon"
                 variant="ghost"
+                onClick={() => setMostrarDados((v) => !v)}
+                title={mostrarDados ? "Ocultar dados sensíveis" : "Mostrar dados sensíveis"}
+              >
+                {mostrarDados ? (
+                  <Eye className="size-3.5" />
+                ) : (
+                  <EyeOff className="size-3.5" />
+                )}
+              </Button>
+              {whatsappUrl && (
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex size-8 items-center justify-center rounded-md text-[var(--color-foreground)] hover:bg-[var(--color-surface)] transition-colors"
+                  title={`WhatsApp · ${cliente.telefone}`}
+                >
+                  <MessageCircle className="size-3.5" />
+                </a>
+              )}
+              <Button
+                size="icon"
+                variant="ghost"
                 onClick={() => setEditOpen(true)}
                 title="Editar"
               >
@@ -224,10 +267,7 @@ export function ClienteCardDrawer({
                 </span>
               )}
             </p>
-            <h2
-              className="display-serif text-3xl sm:text-4xl leading-tight"
-              style={{ fontVariationSettings: '"SOFT" 50, "opsz" 144' }}
-            >
+            <h2 className="display-serif text-3xl sm:text-4xl leading-tight">
               {cliente.nome}
             </h2>
           </div>
@@ -312,6 +352,24 @@ export function ClienteCardDrawer({
                   </span>
                 </button>
               ))}
+              {pontuacoesCustom
+                .filter((p) => p.ativo)
+                .map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => registrarCustom(p)}
+                    disabled={pending}
+                    className="flex items-center justify-between p-3 rounded-md border border-[var(--color-border)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 transition-colors text-left text-sm disabled:opacity-50"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="text-lg">{p.icone}</span>
+                      <span>{p.label}</span>
+                    </span>
+                    <span className="text-xs font-semibold text-[var(--color-primary)]">
+                      +{p.valor}
+                    </span>
+                  </button>
+                ))}
             </div>
 
             {ajusteAberto ? (
@@ -452,32 +510,54 @@ export function ClienteCardDrawer({
             )}
           </div>
 
-          <div className="space-y-2 text-sm">
-            {d.endereco && (
-              <Row icon={<Home className="size-4" />} text={d.endereco} />
-            )}
-            {d.aniversario && (
-              <Row
-                icon={<Cake className="size-4" />}
-                text={new Date(d.aniversario).toLocaleDateString("pt-BR")}
-              />
-            )}
-            {d.filhos && (
-              <Row icon={<UsersIcon className="size-4" />} text={d.filhos} />
-            )}
-            {d.profissao && (
-              <Row icon={<Briefcase className="size-4" />} text={d.profissao} />
-            )}
-            {d.hobby && (
-              <Row icon={<Dumbbell className="size-4" />} text={d.hobby} />
-            )}
-            {cliente.telefone && (
-              <Row
-                icon={<Phone className="size-4" />}
-                text={cliente.telefone}
-              />
-            )}
-          </div>
+          {mostrarDados ? (
+            <div className="space-y-2 text-sm">
+              {d.endereco && (
+                <Row icon={<Home className="size-4" />} text={d.endereco} />
+              )}
+              {d.aniversario && (
+                <Row
+                  icon={<Cake className="size-4" />}
+                  text={new Date(d.aniversario).toLocaleDateString("pt-BR")}
+                />
+              )}
+              {d.filhos && (
+                <Row icon={<UsersIcon className="size-4" />} text={d.filhos} />
+              )}
+              {d.profissao && (
+                <Row icon={<Briefcase className="size-4" />} text={d.profissao} />
+              )}
+              {d.hobby && (
+                <Row icon={<Dumbbell className="size-4" />} text={d.hobby} />
+              )}
+              {cliente.telefone && (
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="text-[var(--color-muted)]">
+                    <Phone className="size-4" />
+                  </span>
+                  <span className="flex-1">{cliente.telefone}</span>
+                  {whatsappUrl && (
+                    <a
+                      href={whatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-2 h-7 rounded-md border border-[var(--color-border)] text-xs hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
+                      title="Abrir conversa no WhatsApp"
+                    >
+                      <MessageCircle className="size-3" /> WhatsApp
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={() => setMostrarDados(true)}
+              className="w-full p-3 rounded-md border border-dashed border-[var(--color-border)] text-xs text-[var(--color-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] flex items-center justify-center gap-2"
+            >
+              <EyeOff className="size-3.5" /> Dados pessoais ocultos · clique para mostrar
+            </button>
+          )}
 
           {nivel?.beneficios && nivel.beneficios.length > 0 ? (
             <div className="p-3 rounded-md border border-yellow-500/30 bg-yellow-500/5 space-y-1">
@@ -492,7 +572,7 @@ export function ClienteCardDrawer({
             </div>
           ) : null}
 
-          {cliente.eventos_fpts.length > 0 && (
+          {mostrarDados && cliente.eventos_fpts.length > 0 && (
             <div className="space-y-2">
               <h3 className="font-medium text-sm">Histórico FPTS</h3>
               <ul className="space-y-1.5">

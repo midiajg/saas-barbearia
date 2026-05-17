@@ -30,6 +30,13 @@ export type TipoEventoFpts =
 
 // ---------- JSONB shapes ----------------------------------------------
 
+// Valor configurável como R$ ou %. Usado em desconto extra, comissão por
+// produto e custo de material por serviço.
+export type ValorOuPct = {
+  tipo: "real" | "percentual";
+  valor: number;
+};
+
 export type Horario = {
   dia_semana: number; // 0=domingo ... 6=sábado
   abertura: string; // "HH:MM"
@@ -57,6 +64,16 @@ export type FptsRegras = {
   aniversario: number;
 };
 
+// Regras de FPTS criadas pela barbearia além das 5 fixas (extensível).
+// `icone` é um único caractere/emoji renderizado no botão do card.
+export type FptsRegraCustom = {
+  id: string;
+  icone: string;
+  label: string;
+  valor: number;
+  ativo: boolean;
+};
+
 export type CashbackRegra = {
   fpts_por_real: number;
   max_pct: number;
@@ -71,6 +88,9 @@ export type CatalogoServico = {
   preco_mensal: number;
   preco_eventual: number;
   ativo: boolean;
+  // Custo de material usado no serviço (descontado da base de comissão).
+  // Ex: { tipo: 'real', valor: 5 } = R$5 por serviço.
+  custo_material?: ValorOuPct | null;
 };
 
 export type CatalogoProduto = {
@@ -81,6 +101,9 @@ export type CatalogoProduto = {
   estoque: number;
   desconto_por_nivel: Record<string, number> | null; // { "1": 5, "2": 10, "3": 15 }
   ativo: boolean;
+  // Comissão específica deste produto. Quando definida, sobrescreve a
+  // comissão padrão do barbeiro APENAS na venda deste produto.
+  comissao?: ValorOuPct | null;
 };
 
 export type WhatsappConfig = {
@@ -120,6 +143,7 @@ export type BarbeariaConfig = {
   caixa_atual?: CaixaAbertoRef | null;
   caixas_historico?: CaixaFechadoRef[];
   pacotes?: Pacote[];
+  pontuacoes_custom?: FptsRegraCustom[];
 };
 
 type MovimentoCaixaRef = {
@@ -156,13 +180,16 @@ export type MovimentoCaixa = MovimentoCaixaRef;
 export type CaixaAberto = CaixaAbertoRef;
 export type CaixaFechado = CaixaFechadoRef;
 
+export type MotivoBloqueio = "almoco" | "ausencia_medica" | "folga" | "outros";
+
 // Refs (mesma shape declarada depois — split pra não dar referência circular)
 type BloqueioRef = {
   id: string;
   barbeiro_id: string;
   inicio: string;
   fim: string;
-  motivo?: string;
+  motivo?: string; // texto livre (mantido pra compatibilidade + caso "outros")
+  motivo_tipo?: MotivoBloqueio;
 };
 type DespesaRef = {
   id: string;
@@ -200,6 +227,9 @@ export type ServicoAtendido = {
   nome: string;
   preco: number;
   duracao_min: number;
+  // Snapshot do custo de material no momento da venda — em R$ já resolvido.
+  // Usado pelo relatório de comissões pra descontar da base.
+  custo_material?: number;
 };
 
 export type ProdutoVendido = {
@@ -208,6 +238,9 @@ export type ProdutoVendido = {
   preco: number; // preço final (com desconto de nível aplicado)
   qtd: number;
   desconto_pct?: number;
+  // Snapshot da comissão configurada no produto no momento da venda.
+  // Quando ausente, comissões aplicam o % padrão do barbeiro.
+  comissao?: ValorOuPct;
 };
 
 // ---------- Entidades -------------------------------------------------
@@ -234,6 +267,7 @@ export type Equipe = {
   cor: string;
   comissao_pct: string; // numeric vira string
   ativo: boolean;
+  lider: boolean;
   criado_em: string;
 };
 

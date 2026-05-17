@@ -73,6 +73,7 @@ export function FecharContaDialog({
   const [forma, setForma] = useState<FormaPagamento>("pix");
   const [usarCashback, setUsarCashback] = useState(false);
   const [descontoExtra, setDescontoExtra] = useState("0");
+  const [descontoTipo, setDescontoTipo] = useState<"real" | "percentual">("real");
   const [produtosSel, setProdutosSel] = useState<ProdutoSelecionado[]>([]);
   const [buscaProduto, setBuscaProduto] = useState("");
 
@@ -85,8 +86,13 @@ export function FecharContaDialog({
     [produtosSel]
   );
 
-  const descontoExtraNum = Number.parseFloat(descontoExtra) || 0;
+  const descontoInformado = Number.parseFloat(descontoExtra) || 0;
   const valorTotal = valorBase + valorProdutos;
+  // Resolve % em R$ para o cálculo. Backend recebe sempre o R$ resolvido.
+  const descontoExtraNum =
+    descontoTipo === "percentual"
+      ? Math.round(valorTotal * Math.min(100, Math.max(0, descontoInformado))) / 100
+      : descontoInformado;
   const valorComDescontoExtra = Math.max(0, valorTotal - descontoExtraNum);
 
   const preview = useMemo(() => {
@@ -238,16 +244,54 @@ export function FecharContaDialog({
               >
                 Desconto extra
               </Label>
-              <Input
-                id="descontoExtra"
-                type="number"
-                min="0"
-                step="0.01"
-                value={descontoExtra}
-                onChange={(e) => setDescontoExtra(e.target.value)}
-                className="w-28 text-right h-9 rounded-none bg-transparent font-mono tabular-nums border-[var(--color-hairline)]"
-              />
+              <div className="flex items-center gap-1">
+                <div className="inline-flex border border-[var(--color-hairline)] rounded-none">
+                  <button
+                    type="button"
+                    onClick={() => setDescontoTipo("real")}
+                    className={cn(
+                      "h-9 px-2 text-[10px] font-mono tracking-widest transition-colors",
+                      descontoTipo === "real"
+                        ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
+                        : "text-[var(--color-muted)] hover:bg-[var(--color-surface)]"
+                    )}
+                    title="Desconto em reais"
+                  >
+                    R$
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDescontoTipo("percentual")}
+                    className={cn(
+                      "h-9 px-2 text-[10px] font-mono tracking-widest transition-colors border-l border-[var(--color-hairline)]",
+                      descontoTipo === "percentual"
+                        ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
+                        : "text-[var(--color-muted)] hover:bg-[var(--color-surface)]"
+                    )}
+                    title="Desconto em percentual"
+                  >
+                    %
+                  </button>
+                </div>
+                <Input
+                  id="descontoExtra"
+                  type="number"
+                  min="0"
+                  step={descontoTipo === "percentual" ? "1" : "0.01"}
+                  max={descontoTipo === "percentual" ? "100" : undefined}
+                  value={descontoExtra}
+                  onChange={(e) => setDescontoExtra(e.target.value)}
+                  className="w-20 text-right h-9 rounded-none bg-transparent font-mono tabular-nums border-[var(--color-hairline)]"
+                />
+              </div>
             </div>
+            {descontoTipo === "percentual" && descontoInformado > 0 && (
+              <div className="flex items-baseline justify-end -mt-1">
+                <span className="font-mono text-[10px] text-[var(--color-muted)] tabular-nums">
+                  = {formatBRL(descontoExtraNum)}
+                </span>
+              </div>
+            )}
           </div>
 
           {produtosDisponiveis.length > 0 && (

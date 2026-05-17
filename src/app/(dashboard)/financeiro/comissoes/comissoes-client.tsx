@@ -183,7 +183,7 @@ export function ComissoesClient({
               Nenhum barbeiro cadastrado.
             </p>
           ) : (
-            <table className="w-full text-sm min-w-[560px]">
+            <table className="w-full text-sm min-w-[640px]">
               <thead>
                 <tr className="border-b border-[var(--color-border)] text-left">
                   <th className="px-3 sm:px-5 py-3 font-medium">Barbeiro</th>
@@ -193,6 +193,9 @@ export function ComissoesClient({
                   </th>
                   <th className="px-3 sm:px-5 py-3 font-medium text-right">
                     Faturamento
+                  </th>
+                  <th className="px-3 sm:px-5 py-3 font-medium text-right">
+                    Custo material
                   </th>
                   <th className="px-3 sm:px-5 py-3 font-medium text-right">
                     Comissão
@@ -216,6 +219,9 @@ export function ComissoesClient({
                     </td>
                     <td className="px-3 sm:px-5 py-3 text-right">
                       {formatBRL(l.faturamentoBruto)}
+                    </td>
+                    <td className="px-3 sm:px-5 py-3 text-right text-[var(--color-muted)]">
+                      {l.custoMaterial > 0 ? `−${formatBRL(l.custoMaterial)}` : "—"}
                     </td>
                     <td className="px-3 sm:px-5 py-3 text-right font-medium text-[var(--color-primary)]">
                       {formatBRL(l.valorComissao)}

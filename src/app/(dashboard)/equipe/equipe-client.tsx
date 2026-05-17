@@ -87,11 +87,16 @@ export function EquipeClient({ equipe }: { equipe: Equipe[] }) {
                   {p.nome.slice(0, 1).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2">
+                  <div className="flex items-baseline gap-2 flex-wrap">
                     <p className="font-medium truncate">{p.nome}</p>
                     <span className="font-mono text-[9px] tracking-[0.22em] uppercase text-[var(--color-primary)] shrink-0">
                       {CARGO_LABEL[p.cargo]}
                     </span>
+                    {p.lider && p.cargo === "barbeiro" && (
+                      <span className="font-mono text-[9px] tracking-[0.22em] uppercase px-1.5 py-0.5 bg-[var(--color-primary)]/15 text-[var(--color-primary)] shrink-0">
+                        Líder
+                      </span>
+                    )}
                   </div>
                   <p className="font-mono text-[10px] tracking-widest uppercase text-[var(--color-muted)] mt-0.5 truncate">
                     {p.email}
@@ -232,18 +237,30 @@ function PessoaDialog({
               required={!editing}
             />
           </div>
-          {editing && (
+          <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
               <input
                 type="checkbox"
-                id="ativo"
-                name="ativo"
-                defaultChecked={editing.ativo}
+                id="lider"
+                name="lider"
+                defaultChecked={editing?.lider ?? false}
                 className="size-4"
               />
-              <Label htmlFor="ativo">Ativo</Label>
+              <Label htmlFor="lider">Barbeiro líder</Label>
             </div>
-          )}
+            {editing && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="ativo"
+                  name="ativo"
+                  defaultChecked={editing.ativo}
+                  className="size-4"
+                />
+                <Label htmlFor="ativo">Ativo</Label>
+              </div>
+            )}
+          </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button
               type="button"

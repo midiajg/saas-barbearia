@@ -1,6 +1,7 @@
 import { requireSession } from "@/lib/auth/session";
 import { ClientesRepo } from "@/infrastructure/database/repositories/clientes.repo";
 import { BarbeariasRepo } from "@/infrastructure/database/repositories/barbearias.repo";
+import { AtendimentosRepo } from "@/infrastructure/database/repositories/atendimentos.repo";
 import { ClientesClient } from "./clientes-client";
 
 export default async function ClientesPage({
@@ -13,10 +14,18 @@ export default async function ClientesPage({
   const clientesRepo = new ClientesRepo(session.barbeariaId);
   const barbeariasRepo = new BarbeariasRepo(session.barbeariaId);
 
-  const [lista, barbearia] = await Promise.all([
+  const [listaCompleta, barbearia] = await Promise.all([
     clientesRepo.list({ search: params.q, limit: 200 }),
     barbeariasRepo.get(),
   ]);
+
+  // Barbeiro vê só clientes que ele já atendeu ou tem agendado.
+  let lista = listaCompleta;
+  if (session.cargo === "barbeiro") {
+    const atRepo = new AtendimentosRepo(session.barbeariaId);
+    const idsPermitidos = await atRepo.clienteIdsDoBarbeiro(session.equipeId);
+    lista = listaCompleta.filter((c) => idsPermitidos.has(c.id));
+  }
 
   return (
     <ClientesClient
@@ -33,6 +42,7 @@ export default async function ClientesPage({
           aniversario: 200,
         }
       }
+      pontuacoesCustom={barbearia?.config.pontuacoes_custom ?? []}
       busca={params.q ?? ""}
     />
   );

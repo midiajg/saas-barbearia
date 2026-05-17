@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { salvarRegrasFpts } from "./actions";
+import { PontuacoesCustomManager } from "./pontuacoes-custom-manager";
 
 export default async function FptsRegrasPage() {
   const session = await requireDonoOuGerente();
@@ -21,6 +22,7 @@ export default async function FptsRegrasPage() {
     fpts_por_real: 100,
     max_pct: 30,
   };
+  const pontuacoesCustom = barbearia?.config.pontuacoes_custom ?? [];
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -112,6 +114,8 @@ export default async function FptsRegrasPage() {
           <Button type="submit">Salvar configurações</Button>
         </div>
       </form>
+
+      <PontuacoesCustomManager pontuacoes={pontuacoesCustom} />
     </div>
   );
 }

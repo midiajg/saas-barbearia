@@ -135,8 +135,21 @@ function ServicoDialog({
   editing: CatalogoServico | null;
 }) {
   const [pending, startTransition] = useTransition();
+  const [custoTipo, setCustoTipo] = useState<"real" | "percentual">(
+    editing?.custo_material?.tipo ?? "real"
+  );
+  const [custoValor, setCustoValor] = useState<string>(
+    editing?.custo_material ? String(editing.custo_material.valor) : ""
+  );
 
   function handleSubmit(formData: FormData) {
+    const custoNum = Number.parseFloat(custoValor);
+    if (!Number.isNaN(custoNum) && custoNum > 0) {
+      formData.set(
+        "custoMaterial",
+        JSON.stringify({ tipo: custoTipo, valor: custoNum })
+      );
+    }
     startTransition(async () => {
       try {
         if (editing) {
@@ -214,6 +227,40 @@ function ServicoDialog({
               </div>
             )}
           </div>
+          <div className="space-y-2">
+            <Label>Custo de material por atendimento (opcional)</Label>
+            <div className="flex items-center gap-2">
+              <div className="inline-flex border border-[var(--color-border)] rounded-md overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setCustoTipo("real")}
+                  className={`h-9 px-3 text-xs font-mono ${custoTipo === "real" ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]" : "text-[var(--color-muted)]"}`}
+                >
+                  R$
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCustoTipo("percentual")}
+                  className={`h-9 px-3 text-xs font-mono border-l border-[var(--color-border)] ${custoTipo === "percentual" ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]" : "text-[var(--color-muted)]"}`}
+                >
+                  %
+                </button>
+              </div>
+              <Input
+                type="number"
+                min="0"
+                step={custoTipo === "percentual" ? "1" : "0.01"}
+                max={custoTipo === "percentual" ? "100" : undefined}
+                value={custoValor}
+                onChange={(e) => setCustoValor(e.target.value)}
+                placeholder={custoTipo === "percentual" ? "Ex: 10" : "Ex: 5.00"}
+              />
+            </div>
+            <p className="text-xs text-[var(--color-muted)]">
+              Descontado da base de cálculo da comissão do barbeiro
+            </p>
+          </div>
+
           <div className="space-y-2">
             <Label>Preços por frequência</Label>
             <div className="grid grid-cols-3 gap-2">

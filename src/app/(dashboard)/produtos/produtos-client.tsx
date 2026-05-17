@@ -174,6 +174,12 @@ function ProdutoDialog({
     }
     return base;
   });
+  const [comissaoTipo, setComissaoTipo] = useState<"real" | "percentual">(
+    editing?.comissao?.tipo ?? "percentual"
+  );
+  const [comissaoValor, setComissaoValor] = useState<string>(
+    editing?.comissao ? String(editing.comissao.valor) : ""
+  );
 
   function handleSubmit(formData: FormData) {
     const descontoObj: Record<string, number> = {};
@@ -183,6 +189,13 @@ function ProdutoDialog({
     }
     if (Object.keys(descontoObj).length > 0) {
       formData.set("descontoPorNivel", JSON.stringify(descontoObj));
+    }
+    const comissaoNum = Number.parseFloat(comissaoValor);
+    if (!Number.isNaN(comissaoNum) && comissaoNum > 0) {
+      formData.set(
+        "comissao",
+        JSON.stringify({ tipo: comissaoTipo, valor: comissaoNum })
+      );
     }
 
     startTransition(async () => {
@@ -261,6 +274,40 @@ function ProdutoDialog({
                 required
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Comissão do barbeiro neste produto (opcional)</Label>
+            <div className="flex items-center gap-2">
+              <div className="inline-flex border border-[var(--color-border)] rounded-md overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setComissaoTipo("real")}
+                  className={`h-9 px-3 text-xs font-mono ${comissaoTipo === "real" ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]" : "text-[var(--color-muted)]"}`}
+                >
+                  R$
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setComissaoTipo("percentual")}
+                  className={`h-9 px-3 text-xs font-mono border-l border-[var(--color-border)] ${comissaoTipo === "percentual" ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]" : "text-[var(--color-muted)]"}`}
+                >
+                  %
+                </button>
+              </div>
+              <Input
+                type="number"
+                min="0"
+                step={comissaoTipo === "percentual" ? "1" : "0.01"}
+                max={comissaoTipo === "percentual" ? "100" : undefined}
+                value={comissaoValor}
+                onChange={(e) => setComissaoValor(e.target.value)}
+                placeholder={comissaoTipo === "percentual" ? "Ex: 20" : "Ex: 5.00"}
+              />
+            </div>
+            <p className="text-xs text-[var(--color-muted)]">
+              Em branco = barbeiro recebe a comissão padrão dele
+            </p>
           </div>
 
           {niveis.length > 0 && (

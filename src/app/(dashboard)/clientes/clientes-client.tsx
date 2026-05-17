@@ -12,6 +12,7 @@ import { Eyebrow, DoubleRule } from "@/components/editorial";
 import type {
   CatalogoServico,
   Cliente,
+  FptsRegraCustom,
   FptsRegras,
   Nivel,
   Pacote,
@@ -23,6 +24,7 @@ export function ClientesClient({
   pacotes,
   servicos,
   fptsRegras,
+  pontuacoesCustom,
   busca,
 }: {
   clientes: Cliente[];
@@ -30,6 +32,7 @@ export function ClientesClient({
   pacotes: Pacote[];
   servicos: CatalogoServico[];
   fptsRegras: FptsRegras;
+  pontuacoesCustom: FptsRegraCustom[];
   busca: string;
 }) {
   const router = useRouter();
@@ -167,6 +170,7 @@ export function ClientesClient({
           pacotes={pacotes}
           servicos={servicos}
           fptsRegras={fptsRegras}
+          pontuacoesCustom={pontuacoesCustom}
           onClose={() => setDrawerCliente(null)}
         />
       )}
