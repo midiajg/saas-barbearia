@@ -5,7 +5,23 @@ import { z } from "zod";
 import { requireSession } from "@/lib/auth/session";
 import { ClientesRepo } from "@/infrastructure/database/repositories/clientes.repo";
 import { BarbeariasRepo } from "@/infrastructure/database/repositories/barbearias.repo";
+import { AtendimentosRepo } from "@/infrastructure/database/repositories/atendimentos.repo";
+import type { SessionEquipe } from "@/lib/auth/jwt";
 import type { DadosPessoais } from "@/infrastructure/database/types";
+
+// Barbeiro só pode mexer em clientes que ele atendeu/atenderá.
+// Dono e gerente passam livre.
+async function garantirAcessoAoCliente(
+  session: SessionEquipe,
+  clienteId: string
+) {
+  if (session.cargo !== "barbeiro") return;
+  const atRepo = new AtendimentosRepo(session.barbeariaId);
+  const idsPermitidos = await atRepo.clienteIdsDoBarbeiro(session.equipeId);
+  if (!idsPermitidos.has(clienteId)) {
+    throw new Error("Você só pode mexer em clientes que atendeu");
+  }
+}
 
 const baseSchema = z.object({
   nome: z.string().min(2),
@@ -64,6 +80,7 @@ export async function criarCliente(formData: FormData) {
 
 export async function atualizarCliente(id: string, formData: FormData) {
   const session = await requireSession();
+  await garantirAcessoAoCliente(session, id);
   const data = parse(formData);
   const repo = new ClientesRepo(session.barbeariaId);
   await repo.atualizar(id, {
@@ -85,6 +102,7 @@ export async function registrarEventoFpts(
   pontosOverride?: number
 ) {
   const session = await requireSession();
+  await garantirAcessoAoCliente(session, clienteId);
   const clientesRepo = new ClientesRepo(session.barbeariaId);
   const barbeariasRepo = new BarbeariasRepo(session.barbeariaId);
   const barbearia = await barbeariasRepo.get();
@@ -131,6 +149,7 @@ export async function registrarPontuacaoCustom(
   pontuacaoId: string
 ) {
   const session = await requireSession();
+  await garantirAcessoAoCliente(session, clienteId);
   const clientesRepo = new ClientesRepo(session.barbeariaId);
   const barbeariasRepo = new BarbeariasRepo(session.barbeariaId);
   const barbearia = await barbeariasRepo.get();
@@ -156,6 +175,7 @@ export async function registrarPontuacaoCustom(
 
 export async function deletarCliente(id: string) {
   const session = await requireSession();
+  await garantirAcessoAoCliente(session, id);
   const repo = new ClientesRepo(session.barbeariaId);
   await repo.deletar(id);
   revalidatePath("/clientes");

@@ -21,6 +21,7 @@ import type {
   Cliente,
   Equipe,
   FilaItem,
+  FptsRegraCustom,
   FptsRegras,
   Nivel,
 } from "@/infrastructure/database/types";
@@ -41,6 +42,7 @@ export function AgendaClient({
   horaFim,
   cashbackRegra,
   fptsRegras,
+  pontuacoesCustom,
 }: {
   data: string;
   equipe: Equipe[];
@@ -54,6 +56,7 @@ export function AgendaClient({
   horaFim: number;
   cashbackRegra: CashbackRegra;
   fptsRegras: FptsRegras;
+  pontuacoesCustom: FptsRegraCustom[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -383,6 +386,7 @@ export function AgendaClient({
           niveis={niveis}
           servicos={servicos}
           fptsRegras={fptsRegras}
+          pontuacoesCustom={pontuacoesCustom}
           onFecharConta={() => {
             setCardAbertoId(null);
             setFechandoId(atendimentoCard.id);

@@ -1,4 +1,4 @@
-import { requireSession } from "@/lib/auth/session";
+import { requireDonoOuGerente } from "@/lib/auth/session";
 import { AtendimentosRepo } from "@/infrastructure/database/repositories/atendimentos.repo";
 import { ClientesRepo } from "@/infrastructure/database/repositories/clientes.repo";
 import { EquipeRepo } from "@/infrastructure/database/repositories/equipe.repo";
@@ -14,7 +14,7 @@ export default async function RelatoriosPage({
 }: {
   searchParams: Promise<{ de?: string; ate?: string }>;
 }) {
-  const session = await requireSession();
+  const session = await requireDonoOuGerente();
   const params = await searchParams;
 
   const agora = new Date();

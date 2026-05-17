@@ -78,6 +78,7 @@ const SECTIONS: NavSection[] = [
         href: "/financeiro/caixa",
         label: "Caixa do dia",
         icon: CircleDollarSign,
+        cargos: ["dono", "gerente"],
       },
       { href: "/financeiro/comissoes", label: "Comissões", icon: Wallet },
       {

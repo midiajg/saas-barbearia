@@ -84,7 +84,13 @@ export async function comissoesPorPeriodo(
     acc.set(a.barbeiro_id, prev);
   }
 
-  return equipe.map((b) => {
+  // Barbeiro só vê a linha dele.
+  const equipeVisivel =
+    session.cargo === "barbeiro"
+      ? equipe.filter((b) => b.id === session.equipeId)
+      : equipe;
+
+  return equipeVisivel.map((b) => {
     const d = acc.get(b.id) ?? { qtd: 0, fat: 0, custo: 0, comissao: 0 };
     const pct = Number.parseFloat(b.comissao_pct);
     return {

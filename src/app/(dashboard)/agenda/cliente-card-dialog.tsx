@@ -27,6 +27,7 @@ import type {
   Atendimento,
   CatalogoServico,
   Cliente,
+  FptsRegraCustom,
   FptsRegras,
   Nivel,
 } from "@/infrastructure/database/types";
@@ -40,6 +41,7 @@ type Props = {
   niveis: Nivel[];
   servicos: CatalogoServico[];
   fptsRegras: FptsRegras;
+  pontuacoesCustom: FptsRegraCustom[];
   onFecharConta: () => void;
 };
 
@@ -69,6 +71,7 @@ export function ClienteCardDialog({
   niveis,
   servicos,
   fptsRegras,
+  pontuacoesCustom,
   onFecharConta,
 }: Props) {
   // Privacidade: começa OCULTO. Barbeiro abre o "olhinho" só quando precisa
@@ -175,9 +178,9 @@ export function ClienteCardDialog({
             </div>
           )}
 
-          {/* Info tooltip — regras do FPTS resumidas */}
+          {/* Info tooltip — regras do FPTS (fixas + custom) */}
           {showInfo && (
-            <div className="absolute bottom-16 left-4 bg-white border-2 border-[var(--color-primary)] rounded-xl p-3 z-20 shadow-lg text-sm min-w-[240px] text-[var(--color-foreground)]">
+            <div className="absolute bottom-16 left-4 bg-white border-2 border-[var(--color-primary)] rounded-xl p-3 z-20 shadow-lg text-sm min-w-[240px] max-w-[280px] text-[var(--color-foreground)] max-h-[60vh] overflow-y-auto">
               <p className="font-semibold text-[var(--color-primary)] mb-1 text-xs uppercase tracking-wider">
                 Ganho de FPTS
               </p>
@@ -187,6 +190,13 @@ export function ClienteCardDialog({
                 <li>📸 Instagram: {fptsRegras.instagram} FPTS</li>
                 <li>⏱️ Visita pontual: {fptsRegras.pontualidade} FPTS</li>
                 <li>🎂 Aniversário: {fptsRegras.aniversario} FPTS</li>
+                {pontuacoesCustom
+                  .filter((p) => p.ativo)
+                  .map((p) => (
+                    <li key={p.id}>
+                      {p.icone} {p.label}: {p.valor} FPTS
+                    </li>
+                  ))}
               </ul>
             </div>
           )}
@@ -267,125 +277,120 @@ export function ClienteCardDialog({
               </div>
             </div>
 
-            {/* Dados do cliente + ícones laterais */}
+            {/* Dados do cliente + ícones laterais (botões SEMPRE visíveis) */}
             <div className="px-5 pt-3 pb-4 text-white">
-              {expandido ? (
-                <div className="flex gap-3 items-start">
-                  <ul className="flex-1 space-y-1.5 text-sm">
-                    {dados.endereco && (
-                      <li className="flex items-center gap-2">
-                        <Home className="size-4 text-white/70 shrink-0" />
-                        <span className="truncate font-medium tracking-wide uppercase">
-                          {dados.endereco}
-                        </span>
-                      </li>
-                    )}
-                    {dados.aniversario && (
-                      <li className="flex items-center gap-2">
-                        <Cake className="size-4 text-white/70 shrink-0" />
-                        <span className="font-medium tracking-wide">
-                          <span className="font-bold">{aniv}</span>
-                          {idade != null && (
-                            <span className="text-white/70 ml-2 italic">
-                              {idade} anos
-                            </span>
-                          )}
-                        </span>
-                      </li>
-                    )}
-                    {dados.filhos && (
-                      <li className="flex items-center gap-2">
-                        <Baby className="size-4 text-white/70 shrink-0" />
-                        <span className="truncate font-medium tracking-wide uppercase">
-                          {dados.filhos}
-                        </span>
-                      </li>
-                    )}
-                    {dados.profissao && (
-                      <li className="flex items-center gap-2">
-                        <Briefcase className="size-4 text-white/70 shrink-0" />
-                        <span className="truncate font-medium tracking-wide uppercase">
-                          {dados.profissao}
-                        </span>
-                      </li>
-                    )}
-                    {dados.hobby && (
-                      <li className="flex items-center gap-2">
-                        <Heart className="size-4 text-white/70 shrink-0" />
-                        <span className="truncate font-medium tracking-wide uppercase">
-                          {dados.hobby}
-                        </span>
-                      </li>
-                    )}
-                    {!dados.endereco &&
-                      !dados.aniversario &&
-                      !dados.filhos &&
-                      !dados.profissao &&
-                      !dados.hobby && (
-                        <li className="text-xs text-white/60 italic">
-                          Sem dados relacionais preenchidos
+              <div className="flex gap-3 items-start">
+                <div className="flex-1 min-w-0">
+                  {expandido ? (
+                    <ul className="space-y-1.5 text-sm">
+                      {dados.endereco && (
+                        <li className="flex items-center gap-2">
+                          <Home className="size-4 text-white/70 shrink-0" />
+                          <span className="truncate font-medium tracking-wide uppercase">
+                            {dados.endereco}
+                          </span>
                         </li>
                       )}
-                  </ul>
+                      {dados.aniversario && (
+                        <li className="flex items-center gap-2">
+                          <Cake className="size-4 text-white/70 shrink-0" />
+                          <span className="font-medium tracking-wide">
+                            <span className="font-bold">{aniv}</span>
+                            {idade != null && (
+                              <span className="text-white/70 ml-2 italic">
+                                {idade} anos
+                              </span>
+                            )}
+                          </span>
+                        </li>
+                      )}
+                      {dados.filhos && (
+                        <li className="flex items-center gap-2">
+                          <Baby className="size-4 text-white/70 shrink-0" />
+                          <span className="truncate font-medium tracking-wide uppercase">
+                            {dados.filhos}
+                          </span>
+                        </li>
+                      )}
+                      {dados.profissao && (
+                        <li className="flex items-center gap-2">
+                          <Briefcase className="size-4 text-white/70 shrink-0" />
+                          <span className="truncate font-medium tracking-wide uppercase">
+                            {dados.profissao}
+                          </span>
+                        </li>
+                      )}
+                      {dados.hobby && (
+                        <li className="flex items-center gap-2">
+                          <Heart className="size-4 text-white/70 shrink-0" />
+                          <span className="truncate font-medium tracking-wide uppercase">
+                            {dados.hobby}
+                          </span>
+                        </li>
+                      )}
+                      {!dados.endereco &&
+                        !dados.aniversario &&
+                        !dados.filhos &&
+                        !dados.profissao &&
+                        !dados.hobby && (
+                          <li className="text-xs text-white/60 italic">
+                            Sem dados relacionais preenchidos
+                          </li>
+                        )}
+                    </ul>
+                  ) : (
+                    <div className="space-y-1.5 py-1">
+                      <div className="h-2 rounded-full bg-white/15" />
+                      <div className="h-2 rounded-full bg-white/15 w-11/12" />
+                      <div className="h-2 rounded-full bg-white/15 w-10/12" />
+                      <div className="h-2 rounded-full bg-white/15 w-11/12" />
+                    </div>
+                  )}
+                </div>
 
-                  <div className="flex flex-col gap-1.5 shrink-0">
-                    <button
-                      onClick={() => setShowInfo((v) => !v)}
-                      className="size-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition"
-                      title="Info regras FPTS"
-                    >
-                      <Info className="size-4" />
-                    </button>
-                    {(() => {
-                      const wa = telefoneParaWhatsapp(cliente.telefone);
-                      return wa ? (
-                        <a
-                          href={wa}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="size-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition"
-                          title={`WhatsApp · ${cliente.telefone}`}
-                        >
-                          <MessageCircle className="size-4" />
-                        </a>
-                      ) : (
-                        <button
-                          disabled
-                          className="size-8 rounded-full bg-white/10 flex items-center justify-center text-white/40 cursor-not-allowed"
-                          title="Sem telefone cadastrado"
-                        >
-                          <MessageCircle className="size-4" />
-                        </button>
-                      );
-                    })()}
-                    <a
-                      href="/clientes"
-                      className="size-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition"
-                      title="Editar cliente"
-                    >
-                      <Pencil className="size-4" />
-                    </a>
-                  </div>
+                <div className="flex flex-col gap-1.5 shrink-0">
+                  <button
+                    onClick={() => setShowInfo((v) => !v)}
+                    className="size-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition"
+                    title="Info regras FPTS"
+                  >
+                    <Info className="size-4" />
+                  </button>
+                  {(() => {
+                    const wa = telefoneParaWhatsapp(cliente.telefone);
+                    return wa ? (
+                      <a
+                        href={wa}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="size-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition"
+                        title={`WhatsApp · ${cliente.telefone}`}
+                      >
+                        <MessageCircle className="size-4" />
+                      </a>
+                    ) : (
+                      <button
+                        disabled
+                        className="size-8 rounded-full bg-white/10 flex items-center justify-center text-white/40 cursor-not-allowed"
+                        title="Sem telefone cadastrado"
+                      >
+                        <MessageCircle className="size-4" />
+                      </button>
+                    );
+                  })()}
+                  <a
+                    href="/clientes"
+                    className="size-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition"
+                    title="Editar cliente"
+                  >
+                    <Pencil className="size-4" />
+                  </a>
                 </div>
-              ) : (
-                <div className="space-y-1.5 py-1">
-                  <div className="h-2 rounded-full bg-white/15" />
-                  <div className="h-2 rounded-full bg-white/15 w-11/12" />
-                  <div className="h-2 rounded-full bg-white/15 w-10/12" />
-                  <div className="h-2 rounded-full bg-white/15 w-11/12" />
-                </div>
-              )}
+              </div>
             </div>
 
-            {/* Rodapé: ℹ info esquerda + FECHAR CONTA pílula + 💰 */}
+            {/* Rodapé: FECHAR CONTA pílula + 💰 */}
             <div className="px-5 pb-5 flex items-center gap-3">
-              <button
-                onClick={() => setShowInfo((v) => !v)}
-                className="size-9 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition shrink-0"
-                title="Info"
-              >
-                <Info className="size-4" />
-              </button>
               <button
                 onClick={() => {
                   onOpenChange(false);
@@ -473,6 +478,7 @@ export function ClienteCardDialog({
           nivel={nivel}
           servicos={servicos}
           fptsRegras={fptsRegras}
+          pontuacoesCustom={pontuacoesCustom}
         />
       )}
     </>

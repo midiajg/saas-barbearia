@@ -77,7 +77,11 @@ export async function fecharConta(input: z.infer<typeof schema>) {
   );
 
   // Snapshot do custo de material por serviço — usado pelo relatório de
-  // comissões pra abater da base de cálculo. Resolve % no preço cheio.
+  // comissões pra abater da base de cálculo.
+  // IMPORTANTE: percentual é calculado sobre o preço ORIGINAL do catálogo,
+  // não sobre s.preco. Caso contrário, quando um pacote cobre o serviço
+  // (s.preco=0), o custo zeraria também — mas o material foi usado e tem
+  // custo real pro dono.
   const catalogoServicos = new Map(
     barbearia.config.catalogo_servicos.map((s) => [s.id, s])
   );
@@ -85,9 +89,10 @@ export async function fecharConta(input: z.infer<typeof schema>) {
     const catalogo = catalogoServicos.get(s.id);
     const cm = catalogo?.custo_material;
     if (!cm || cm.valor <= 0) return s;
+    const baseParaPercentual = catalogo?.preco_eventual ?? s.preco;
     const custoReais =
       cm.tipo === "percentual"
-        ? Math.round(s.preco * (cm.valor / 100) * 100) / 100
+        ? Math.round(baseParaPercentual * (cm.valor / 100) * 100) / 100
         : Math.round(cm.valor * 100) / 100;
     return { ...s, custo_material: custoReais };
   });

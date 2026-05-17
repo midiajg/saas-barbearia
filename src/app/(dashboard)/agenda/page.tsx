@@ -77,6 +77,7 @@ export default async function AgendaPage({
           aniversario: 200,
         }
       }
+      pontuacoesCustom={barbearia?.config.pontuacoes_custom ?? []}
     />
   );
 }

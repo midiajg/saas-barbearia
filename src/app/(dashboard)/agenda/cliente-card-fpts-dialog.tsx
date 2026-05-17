@@ -10,6 +10,7 @@ import { formatBRL } from "@/lib/utils";
 import type {
   CatalogoServico,
   Cliente,
+  FptsRegraCustom,
   FptsRegras,
   Nivel,
 } from "@/infrastructure/database/types";
@@ -21,6 +22,7 @@ type Props = {
   nivel: Nivel;
   servicos: CatalogoServico[];
   fptsRegras: FptsRegras;
+  pontuacoesCustom: FptsRegraCustom[];
 };
 
 export function ClienteCardFptsDialog({
@@ -30,6 +32,7 @@ export function ClienteCardFptsDialog({
   nivel,
   servicos,
   fptsRegras,
+  pontuacoesCustom,
 }: Props) {
   const cabelo = servicos.find((s) => /cabelo|corte/i.test(s.nome));
   const barba = servicos.find((s) => /barba/i.test(s.nome));
@@ -79,6 +82,17 @@ export function ClienteCardFptsDialog({
             <FptsBola icone="🤝" label="Indicação" pontos={fptsRegras.indicacao} />
             <FptsBola icone="📸" label="Instagram" pontos={fptsRegras.instagram} />
             <FptsBola icone="⏱️" label="Visita" pontos={fptsRegras.pontualidade} />
+            <FptsBola icone="🎂" label="Aniversário" pontos={fptsRegras.aniversario} />
+            {pontuacoesCustom
+              .filter((p) => p.ativo)
+              .map((p) => (
+                <FptsBola
+                  key={p.id}
+                  icone={p.icone}
+                  label={p.label}
+                  pontos={p.valor}
+                />
+              ))}
           </div>
 
           <div className="bg-[#f5c930] border-2 border-[#c99a00] rounded-xl p-4">

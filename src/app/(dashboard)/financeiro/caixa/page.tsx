@@ -1,10 +1,10 @@
-import { requireSession } from "@/lib/auth/session";
+import { requireDonoOuGerente } from "@/lib/auth/session";
 import { BarbeariasRepo } from "@/infrastructure/database/repositories/barbearias.repo";
 import { AtendimentosRepo } from "@/infrastructure/database/repositories/atendimentos.repo";
 import { CaixaClient } from "./caixa-client";
 
 export default async function CaixaPage() {
-  const session = await requireSession();
+  const session = await requireDonoOuGerente();
   const barbeariasRepo = new BarbeariasRepo(session.barbeariaId);
   const atRepo = new AtendimentosRepo(session.barbeariaId);
 
