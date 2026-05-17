@@ -28,8 +28,8 @@
   --color-warning: #D9A441;
 
   /* Tipografia */
-  --font-display: var(--font-display, "Fraunces"), "Playfair Display", Georgia, serif;
-  --font-sans: var(--font-sans, "Inter"), system-ui, sans-serif;
+  --font-display: var(--font-display, "Playfair Display"), Georgia, serif;
+  --font-sans: var(--font-sans, "Poppins"), "Inter", system-ui, sans-serif;
   --font-mono: var(--font-mono, "JetBrains Mono"), ui-monospace, monospace;
 
   --radius-sm: 0.25rem;
@@ -52,7 +52,6 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    font-feature-settings: "ss01" on, "cv11" on; /* alt forms do Inter */
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
@@ -67,7 +66,6 @@
 
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    font-feature-settings: "ss01" on, "ss02" on;
     letter-spacing: -0.018em;
   }
 
@@ -120,8 +118,6 @@
   /* Display serif — manchetes editoriais */
   .display-serif {
     font-family: var(--font-display);
-    font-feature-settings: "ss01" on, "ss02" on;
-    font-variation-settings: "SOFT" 50, "opsz" 144;
     letter-spacing: -0.025em;
     line-height: 0.95;
   }
@@ -130,7 +126,6 @@
   .display-italic {
     font-family: var(--font-display);
     font-style: italic;
-    font-variation-settings: "SOFT" 100, "opsz" 144;
   }
 
   /* Tracking widest customizado */
